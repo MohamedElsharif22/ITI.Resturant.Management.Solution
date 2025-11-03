@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ITI.Resturant.Management.Domain.Entities.Order_;
 
 namespace ITI.Resturant.Management.Application.Services
 {
@@ -14,6 +15,7 @@ namespace ITI.Resturant.Management.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private static DateTime _lastReset = DateTime.Today;
         private static readonly SemaphoreSlim _resetSemaphore = new SemaphoreSlim(1, 1);
+        private static readonly SemaphoreSlim _inventoryLock = new SemaphoreSlim(1, 1);
 
         public MenuService(IUnitOfWork unitOfWork)
         {
@@ -83,64 +85,92 @@ namespace ITI.Resturant.Management.Application.Services
 
         public async Task<IEnumerable<MenuItem>> GetByCategoryAsync(int categoryId)
         {
-            return await _unitOfWork.Repository<MenuItem, IMenuRepository>().GetByCategoryAsync(categoryId);
+            var items = await GetAllMenuItemsAsync();
+            return items.Where(i => i.CategoryId == categoryId);
         }
 
-        public async Task<IEnumerable<MenuItem>> SearchAsync(string term)
+        public async Task<bool> ValidateAndDecrementInventoryAsync(IEnumerable<OrderItem> items)
         {
-            return await _unitOfWork.Repository<MenuItem, IMenuRepository>().SearchAsync(term);
+            await _inventoryLock.WaitAsync();
+            try
+            {
+                foreach (var item in items)
+                {
+                    var menuItem = await _unitOfWork.Repository<MenuItem>().GetByIdAsync(item.MenuItemId);
+                    if (menuItem == null || !menuItem.IsAvailable)
+                        return false;
+                        
+                    if (menuItem.DailyOrderCount + item.Quantity > 50)
+                        return false;
+                        
+                    menuItem.DailyOrderCount += item.Quantity;
+                    if (menuItem.DailyOrderCount >= 50)
+                    {
+                        menuItem.IsAvailable = false;
+                    }
+                    _unitOfWork.Repository<MenuItem>().Update(menuItem);
+                }
+                
+                await _unitOfWork.CompleteAsync();
+                return true;
+            }
+            finally
+            {
+                _inventoryLock.Release();
+            }
+        }
+
+        public async Task<IEnumerable<MenuItem>> SearchAsync(string searchTerm)
+        {
+            var items = await GetAllMenuItemsAsync();
+            if (string.IsNullOrWhiteSpace(searchTerm))
+                return items;
+
+            searchTerm = searchTerm.ToLower();
+            return items.Where(i => 
+                i.Name.ToLower().Contains(searchTerm) || 
+                (i.Description != null && i.Description.ToLower().Contains(searchTerm)));
         }
 
         public async Task<bool> CheckItemAvailabilityAsync(int itemId)
         {
-            await EnsureDailyResetAsync();
             var item = await GetMenuItemByIdAsync(itemId);
-            if (item == null) return false;
-            return item.IsAvailable && item.DailyOrderCount < 50;
+            return item?.IsAvailable == true && item.DailyOrderCount < 50;
         }
 
         public async Task<IEnumerable<MenuCategory>> GetActiveCategoriesAsync()
         {
-            await EnsureDailyResetAsync();
             var categories = await _unitOfWork.Repository<MenuCategory>().GetAllAsync();
-            var items = await _unitOfWork.Repository<MenuItem>().GetAllAsync();
-            return categories.Where(c => items.Any(i => i.CategoryId == c.Id && i.IsAvailable));
+            var items = await GetAllMenuItemsAsync();
+            
+            // Only return categories that have at least one available item
+            return categories.Where(c => 
+                items.Any(i => i.CategoryId == c.Id && i.IsAvailable));
         }
 
-        public async Task BulkDeleteAsync(IEnumerable<int> ids)
+        public async Task<bool> BulkDeleteAsync(IEnumerable<int> itemIds)
         {
-            if (ids == null) return;
-            foreach (var id in ids)
+            foreach (var id in itemIds)
             {
-                var entity = await GetMenuItemByIdAsync(id);
-                if (entity == null) continue;
-                _unitOfWork.Repository<MenuItem>().Delete(entity);
+                var item = await GetMenuItemByIdAsync(id);
+                if (item != null)
+                {
+                    _unitOfWork.Repository<MenuItem>().Delete(item);
+                }
             }
-            await _unitOfWork.CompleteAsync();
+            return await _unitOfWork.CompleteAsync() > 0;
         }
 
         private async Task EnsureDailyResetAsync()
         {
-            var today = DateTime.Today;
-            if (_lastReset >= today) return;
-
             await _resetSemaphore.WaitAsync();
             try
             {
-                if (_lastReset >= today) return;
-
-                var repo = _unitOfWork.Repository<MenuItem>();
-                var items = (await repo.GetAllAsync()).ToList();
-
-                foreach (var it in items)
+                if (_lastReset.Date < DateTime.Today)
                 {
-                    it.DailyOrderCount = 0;
-                    it.IsAvailable = true;
-                    repo.Update(it);
+                    await UpdateDailyCountersAsync();
+                    _lastReset = DateTime.Today;
                 }
-
-                await _unitOfWork.CompleteAsync();
-                _lastReset = today;
             }
             finally
             {

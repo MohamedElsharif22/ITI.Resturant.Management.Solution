@@ -1,23 +1,37 @@
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
+using ITI.Resturant.Management.Application.Services;
 using ITI.Resturant.Management.MVC.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 
 namespace ITI.Resturant.Management.MVC.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly IMenuService _menuService;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(IMenuService menuService)
         {
-            _logger = logger;
+            _menuService = menuService;
         }
 
-        public IActionResult Index()
+        [HttpGet]
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var items = (await _menuService.GetAvailableMenuItemsAsync()).ToList();
+            var categories = (await _menuService.GetActiveCategoriesAsync()).ToList();
+
+            var model = new HomeViewModel
+            {
+                FeaturedMenuItems = items.Take(6).ToList(),
+                Categories = categories
+            };
+
+            return View(model);
         }
 
+        [HttpGet]
         public IActionResult Privacy()
         {
             return View();

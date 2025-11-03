@@ -1,0 +1,274 @@
+﻿<style>
+    .mini-cart-dropdown {
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0;
+        width: 380px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+        z-index: 1000;
+        max-height: 500px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+        .cart-icon:hover .mini-cart-dropdown,
+        .mini-cart-dropdown:hover {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+    .mini-cart-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+        color: white;
+        padding: 1rem 1.5rem;
+        font-weight: 700;
+        font-size: 1.1rem;
+        border-radius: 15px 15px 0 0;
+    }
+
+    .mini-cart-items {
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 1rem;
+    }
+
+    .mini-cart-item {
+        display: flex;
+        gap: 1rem;
+        padding: 0.75rem;
+        background: rgba(64, 145, 108, 0.05);
+        border-radius: 10px;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s ease;
+    }
+
+        .mini-cart-item:hover {
+            background: rgba(64, 145, 108, 0.1);
+            transform: translateX(3px);
+        }
+
+    .mini-cart-item-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+        flex-shrink: 0;
+    }
+
+    .mini-cart-item-details {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .mini-cart-item-name {
+        font-weight: 700;
+        color: var(--primary-dark);
+        font-size: 0.95rem;
+        margin-bottom: 0.25rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .mini-cart-item-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .mini-cart-item-price {
+        font-weight: 700;
+        color: var(--accent-light);
+        font-size: 1rem;
+    }
+
+    .mini-cart-empty {
+        padding: 2rem 1rem;
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+        .mini-cart-empty i {
+            font-size: 3rem;
+            opacity: 0.3;
+            margin-bottom: 0.5rem;
+        }
+
+    .mini-cart-footer {
+        padding: 1rem 1.5rem;
+        border-top: 2px solid #f0f0f0;
+        background: #fafafa;
+    }
+
+    .mini-cart-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin-bottom: 1rem;
+    }
+
+    .mini-cart-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+
+    .mini-cart-btn {
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: inline-block;
+    }
+
+    .mini-cart-btn-view {
+        background: var(--primary-color);
+        color: white;
+        border: 2px solid var(--primary-color);
+    }
+
+        .mini-cart-btn-view:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+    .mini-cart-btn-checkout {
+        background: var(--accent-color);
+        color: white;
+        border: 2px solid var(--accent-color);
+    }
+
+        .mini-cart-btn-checkout:hover {
+            background: var(--accent-light);
+            border-color: var(--accent-light);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+    @@media (max-width: 768px) {
+        .mini-cart-dropdown
+
+    {
+        width: 320px;
+    }
+
+    }
+
+    /* Scrollbar for mini cart */
+    .mini-cart-items::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .mini-cart-items::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .mini-cart-items::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+        border-radius: 3px;
+    }
+
+        .mini-cart-items::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+</style>
+
+<div class="mini-cart-dropdown" id="miniCart">
+    <div class="mini-cart-header">
+        <i class="fas fa-shopping-cart"></i> Your Cart
+    </div>
+
+    <div class="mini-cart-items" id="miniCartItems">
+        <div class="mini-cart-empty">
+            <i class="fas fa-shopping-cart"></i>
+            <p>Your cart is empty</p>
+        </div>
+    </div>
+
+    <div class="mini-cart-footer" id="miniCartFooter" style="display: none;">
+        <div class="mini-cart-total">
+            <span>Total:</span>
+            <span id="miniCartTotal">$0.00</span>
+        </div>
+        <div class="mini-cart-actions">
+            <a href="/Cart" class="mini-cart-btn mini-cart-btn-view">
+                <i class="fas fa-eye"></i> View Cart
+            </a>
+            <a href="/Order/Create" class="mini-cart-btn mini-cart-btn-checkout">
+                <i class="fas fa-lock"></i> Checkout
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Update mini cart when cart badge is updated
+    function updateMiniCart() {
+        fetch('/Cart/GetCart')
+            .then(response => response.json())
+            .then(cart => {
+                const itemsContainer = document.getElementById('miniCartItems');
+                const footer = document.getElementById('miniCartFooter');
+                const total = document.getElementById('miniCartTotal');
+
+                if (!cart.items || cart.items.length === 0) {
+                    itemsContainer.innerHTML = `
+                        <div class="mini-cart-empty">
+                            <i class="fas fa-shopping-cart"></i>
+                            <p>Your cart is empty</p>
+                        </div>
+                    `;
+                    footer.style.display = 'none';
+                    return;
+                }
+
+                itemsContainer.innerHTML = cart.items.map(item => `
+                    <div class="mini-cart-item">
+                        <img src="${item.imageUrl || 'https://via.placeholder.com/60'}"
+                             alt="${item.name}"
+                             class="mini-cart-item-image">
+                        <div class="mini-cart-item-details">
+                            <div class="mini-cart-item-name">${item.name}</div>
+                            <div class="mini-cart-item-meta">
+                                <span>${item.quantity} x $${item.price.toFixed(2)}</span>
+                                <span class="mini-cart-item-price">$${(item.price * item.quantity).toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                const cartTotal = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                total.textContent = '$' + cartTotal.toFixed(2);
+                footer.style.display = 'block';
+            })
+            .catch(err => console.error('Error updating mini cart:', err));
+    }
+
+    // Update mini cart on page load and periodically
+    document.addEventListener('DOMContentLoaded', function() {
+        updateMiniCart();
+        // Update every 30 seconds
+        setInterval(updateMiniCart, 30000);
+    });
+
+    // Export function for manual updates
+    window.updateMiniCart = updateMiniCart;
+</script>

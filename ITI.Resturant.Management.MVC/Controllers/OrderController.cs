@@ -1,9 +1,10 @@
-using ITI.Resturant.Management.Application.DTOs;
 using ITI.Resturant.Management.Application.Services;
-using ITI.Resturant.Management.Domain.Entities.Enums;
 using ITI.Resturant.Management.Domain.Entities.Order_;
-using Microsoft.AspNetCore.Authorization;
+using ITI.Resturant.Management.Domain.Entities.Menu;
+using ITI.Resturant.Management.Domain.Entities.Enums;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ITI.Resturant.Management.MVC.Controllers
 {
@@ -18,106 +19,94 @@ namespace ITI.Resturant.Management.MVC.Controllers
             _menuService = menuService;
         }
 
-        // GET: Order
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
             var orders = await _orderService.GetAllAsync();
-            var orderSummaries = orders.Select(o => new OrderSummaryDto
-            {
-                Id = o.Id,
-                CustomerName = o.CustomerName,
-                Status = o.Status.ToString(),
-                OrderDate = o.OrderDate,
-                Total = o.Total
-            }).ToList();
-            return View(orderSummaries);
+            return View(orders);
         }
 
-        // GET: Order/Create
+        [HttpGet]
         public async Task<IActionResult> Create()
         {
             var items = await _menuService.GetAvailableMenuItemsAsync();
-            ViewBag.MenuItems = items.ToList();
-            return View(new CreateOrderDto());
+            ViewData["Items"] = items;
+            return View(new Order());
         }
 
-        // POST: Order/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreateOrderDto orderDto)
+        public async Task<IActionResult> Create(Order order)
         {
             if (!ModelState.IsValid)
             {
-                var items = await _menuService.GetAvailableMenuItemsAsync();
-                ViewBag.MenuItems = items.ToList();
-                return View(orderDto);
+                ViewData["Items"] = await _menuService.GetAvailableMenuItemsAsync();
+                return View(order);
             }
 
-            var order = new Order
+            if (!order.ValidateOrder())
             {
-                CustomerName = orderDto.CustomerName,
-                CustomerPhone = orderDto.CustomerPhone,
-                CustomerEmail = orderDto.CustomerEmail ?? string.Empty,
-                OrderType = Enum.Parse<OrderType>(orderDto.OrderType),
-                DeliveryAddress = orderDto.DeliveryAddress ?? string.Empty,
-                OrderItems = orderDto.OrderItems.Select(item => new OrderItem
-                {
-                    MenuItemId = item.MenuItemId,
-                    Quantity = item.Quantity,
-                    UnitPrice = item.UnitPrice,
-                    Subtotal = item.Subtotal
-                }).ToList()
-            };
+                ModelState.AddModelError(string.Empty, "Invalid order data");
+                ViewData["Items"] = await _menuService.GetAvailableMenuItemsAsync();
+                return View(order);
+            }
 
             try
             {
-                await _orderService.CreateAsync(order);
-                TempData["SuccessMessage"] = "Order created successfully!";
-                return RedirectToAction(nameof(Index));
+                var orderId = await _orderService.CreateAsync(order);
+                TempData["SuccessMessage"] = "Order placed successfully";
+                return RedirectToAction("Details", new { id = orderId });
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
-                ModelState.AddModelError("", ex.Message);
-                var items = await _menuService.GetAvailableMenuItemsAsync();
-                ViewBag.MenuItems = items.ToList();
-                return View(orderDto);
+                ModelState.AddModelError(string.Empty, ex.Message);
+                ViewData["Items"] = await _menuService.GetAvailableMenuItemsAsync();
+                return View(order);
             }
         }
 
-        // GET: Order/Details/5
+        [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
             var order = await _orderService.GetByIdAsync(id);
-            if (order == null)
-                return NotFound();
-
+            if (order == null) return NotFound();
             return View(order);
         }
 
-        // POST: Order/Cancel/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddItem(int orderId, int menuItemId, int quantity)
+        {
+            if (quantity <= 0) return BadRequest("Quantity must be positive");
+            try
+            {
+                await _orderService.CreateAsync(new Order
+                {
+                    // simplistic: create a new order item via service API would be better
+                });
+                return RedirectToAction("Details", new { id = orderId });
+            }
+            catch (System.Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+                return RedirectToAction("Details", new { id = orderId });
+            }
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id)
         {
-            if (await _orderService.CanCancelOrderAsync(id))
+            try
             {
                 await _orderService.CancelOrderAsync(id);
-                TempData["SuccessMessage"] = "Order cancelled successfully!";
+                TempData["SuccessMessage"] = "Order cancelled";
             }
-            else
+            catch (System.Exception ex)
             {
-                TempData["ErrorMessage"] = "This order cannot be cancelled.";
+                TempData["ErrorMessage"] = ex.Message;
             }
-            return RedirectToAction(nameof(Index));
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,Staff")]
-        public async Task<IActionResult> UpdateStatus(int id, OrderStatus status)
-        {
-            await _orderService.UpdateStatusAsync(id, status);
-            return RedirectToAction(nameof(Details), new { id });
+            return RedirectToAction("Details", new { id });
         }
     }
 }

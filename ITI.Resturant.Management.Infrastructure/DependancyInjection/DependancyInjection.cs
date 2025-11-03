@@ -68,8 +68,18 @@ namespace ITI.Resturant.Management.Infrastructure.DependancyInjection
             services.AddMemoryCache();
             services.AddScoped<ICartRepository, CartRepository>();
 
-            // Hosted services and background workers
-            services.AddHostedService<OrderProgressionHostedService>();
+            // Configure order progression options
+            services.Configure<OrderProgressionOptions>(options =>
+            {
+                options.MaxConcurrentOrders = 50;
+                options.RetryDelaySeconds = 30;
+                options.MaxRetries = 3;
+            });
+
+            // Hosted services and background workers - register as singleton for both interface and implementation
+            services.AddSingleton<OrderProgressionHostedService>();
+            services.AddSingleton<IOrderProgressionService>(sp => sp.GetRequiredService<OrderProgressionHostedService>());
+            services.AddHostedService(sp => sp.GetRequiredService<OrderProgressionHostedService>());
 
             // Analytics service implementation
             services.AddScoped<IAnalyticsService, AnalyticsService>();

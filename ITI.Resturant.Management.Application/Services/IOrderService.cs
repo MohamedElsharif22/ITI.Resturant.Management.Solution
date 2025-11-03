@@ -17,8 +17,7 @@ namespace ITI.Resturant.Management.Application.Services
         Task<bool> UpdateStatusAsync(int id, OrderStatus status);
         Task<bool> CancelOrderAsync(int id);
         Task<DateTime> EstimateDeliveryTimeAsync(Order order);
-
-        // Additional helpers
+        Task<int> GetEstimatedPreparationTimeAsync(Order order);
         Task<IEnumerable<Order>> GetOrdersByDateRangeAsync(DateTime start, DateTime end);
         decimal CalculateOrderTotal(Order order);
         Task<bool> CanCancelOrderAsync(int orderId);

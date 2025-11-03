@@ -1,4 +1,4 @@
-﻿using ITI.Resturant.Management.Domain.Entities.Menu;
+using ITI.Resturant.Management.Domain.Entities.Menu;
 using System.ComponentModel.DataAnnotations;
 
 namespace ITI.Resturant.Management.Domain.Entities.Order_

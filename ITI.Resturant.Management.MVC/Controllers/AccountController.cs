@@ -12,16 +12,21 @@ namespace ITI.Resturant.Management.MVC.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
 
         [HttpGet]
-        public IActionResult Login()
+        public IActionResult Login(string? returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
             return View(new LoginDto());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginDto dto)
+        public async Task<IActionResult> Login(LoginDto dto, string? returnUrl = null)
         {
-            if (!ModelState.IsValid) return View(dto);
+            if (!ModelState.IsValid)
+            {
+                ViewData["ReturnUrl"] = returnUrl;
+                return View(dto);
+            }
 
             ApplicationUser? user = null;
             if (!string.IsNullOrWhiteSpace(dto.Email))
@@ -37,6 +42,7 @@ namespace ITI.Resturant.Management.MVC.Controllers
             if (user == null)
             {
                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                ViewData["ReturnUrl"] = returnUrl;
                 return View(dto);
             }
 
@@ -44,16 +50,22 @@ namespace ITI.Resturant.Management.MVC.Controllers
             if (!passwordValid)
             {
                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                ViewData["ReturnUrl"] = returnUrl;
                 return View(dto);
             }
 
             // sign in
             await _signInManager.SignInAsync(user, isPersistent: false);
 
+            // Handle return URL
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
             // role check - redirect admin to admin dashboard
             if (await _userManager.IsInRoleAsync(user, "Admin"))
             {
-                // redirect to area Admin -> Dashboard controller Index
                 return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
             }
 
@@ -61,16 +73,22 @@ namespace ITI.Resturant.Management.MVC.Controllers
         }
 
         [HttpGet]
-        public IActionResult Register()
+        public IActionResult Register(string? returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
             return View(new RegisterDto());
         }
 
+        // Update Register method similarly
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterDto dto)
+        public async Task<IActionResult> Register(RegisterDto dto, string? returnUrl = null)
         {
-            if (!ModelState.IsValid) return View(dto);
+            if (!ModelState.IsValid)
+            {
+                ViewData["ReturnUrl"] = returnUrl;
+                return View(dto);
+            }
 
             var user = new ApplicationUser
             {
@@ -87,6 +105,7 @@ namespace ITI.Resturant.Management.MVC.Controllers
                 {
                     ModelState.AddModelError(string.Empty, err.Description);
                 }
+                ViewData["ReturnUrl"] = returnUrl;
                 return View(dto);
             }
 
@@ -94,6 +113,13 @@ namespace ITI.Resturant.Management.MVC.Controllers
             await _userManager.AddToRoleAsync(user, "Customer");
 
             await _signInManager.SignInAsync(user, isPersistent: false);
+
+            // Handle return URL
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
             return RedirectToAction("Index", "Home");
         }
 
@@ -104,17 +130,12 @@ namespace ITI.Resturant.Management.MVC.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Profile()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LogoutPost()
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToAction("Login");
-
-            ViewData["Email"] = user.Email;
-            ViewData["UserName"] = user.UserName;
-            ViewData["FirstName"] = user.FirstName;
-            ViewData["LastName"] = user.LastName;
-            return View();
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Index", "Home");
         }
     }
 }

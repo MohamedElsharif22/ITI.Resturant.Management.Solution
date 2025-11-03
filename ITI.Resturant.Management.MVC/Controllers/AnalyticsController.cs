@@ -1,37 +1,32 @@
 using ITI.Resturant.Management.Application.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 using System;
+using System.Threading.Tasks;
 
 namespace ITI.Resturant.Management.MVC.Controllers
 {
-    [Route("analytics")]
     public class AnalyticsController : Controller
     {
         private readonly IAnalyticsService _analytics;
-        private readonly IOrderService _orders;
 
-        public AnalyticsController(IAnalyticsService analytics, IOrderService orders)
+        public AnalyticsController(IAnalyticsService analytics)
         {
             _analytics = analytics;
-            _orders = orders;
         }
 
-        [HttpGet("")]
-        public async Task<IActionResult> Index(DateTime? from, DateTime? to)
+        [HttpGet]
+        public async Task<IActionResult> Index(DateTime? from = null, DateTime? to = null)
         {
-            var f = from ?? DateTime.Today;
-            var t = to ?? DateTime.Today.AddDays(1).AddTicks(-1);
+            var end = to ?? DateTime.Today;
+            var start = from ?? end.AddDays(-7);
 
-            var daily = await _analytics.GetTotalSalesAsync(f, t);
-            var top = await _analytics.GetTopSellingItemsAsync(f, t, 10);
-            var byCategory = await _analytics.GetSalesByCategoryAsync(f, t);
+            var total = await _analytics.GetTotalSalesAsync(start, end);
+            var daily = await _analytics.GetDailySalesAsync(start, end);
+            var top = await _analytics.GetTopSellingItemsAsync(start, end, 10);
 
-            ViewBag.DailySales = daily;
-            ViewBag.TopItems = top;
-            ViewBag.ByCategory = byCategory;
-            ViewBag.From = f;
-            ViewBag.To = t;
+            ViewData["TotalSales"] = total;
+            ViewData["DailySales"] = daily;
+            ViewData["TopItems"] = top;
 
             return View();
         }

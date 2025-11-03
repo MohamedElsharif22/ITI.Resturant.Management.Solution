@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace ITI.Resturant.Management.Application.Services
 {
@@ -15,13 +16,24 @@ namespace ITI.Resturant.Management.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IDiscountService _discountService;
         private readonly IPricingService _pricingService;
-        private readonly decimal _taxRate = 0.085m; // 8.5% tax rate
+        private readonly IMenuService _menuService;
+        private readonly IOrderProgressionService _orderProgression;
+        private readonly ILogger<OrderService> _logger;
 
-        public OrderService(IUnitOfWork unitOfWork, IDiscountService discountService, IPricingService pricingService)
+        public OrderService(
+            IUnitOfWork unitOfWork,
+            IDiscountService discountService,
+            IPricingService pricingService,
+            IMenuService menuService,
+            IOrderProgressionService orderProgression,
+            ILogger<OrderService> logger)
         {
             _unitOfWork = unitOfWork;
             _discountService = discountService;
             _pricingService = pricingService;
+            _menuService = menuService;
+            _orderProgression = orderProgression;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<Order>> GetAllAsync()
@@ -38,23 +50,13 @@ namespace ITI.Resturant.Management.Application.Services
 
         public async Task<int> CreateAsync(Order order)
         {
-            // validate items
-            foreach (var oi in order.OrderItems)
+            // Validate and decrement inventory atomically
+            if (!await _menuService.ValidateAndDecrementInventoryAsync(order.OrderItems))
             {
-                var menu = await _unitOfWork.Repository<MenuItem>().GetByIdAsync(oi.MenuItemId);
-                if (menu == null || !menu.IsAvailable)
-                    throw new InvalidOperationException($"Menu item {oi.MenuItemId} is not available");
-
-                // increment daily count
-                menu.DailyOrderCount++;
-                if (menu.DailyOrderCount >= 50)
-                {
-                    menu.IsAvailable = false;
-                }
-                _unitOfWork.Repository<MenuItem>().Update(menu);
+                throw new InvalidOperationException("One or more items are no longer available in the requested quantity");
             }
 
-            // calculate totals
+            // Calculate totals
             order.Subtotal = order.OrderItems.Sum(x => x.Subtotal);
             order.Tax = _pricingService.CalculateTax(order.Subtotal);
             order.Discount = _discountService.CalculateDiscount(order);
@@ -69,18 +71,16 @@ namespace ITI.Resturant.Management.Application.Services
             _unitOfWork.Repository<Order>().Add(order);
             await _unitOfWork.CompleteAsync();
 
-            // start background progression (fire-and-forget)
-            _ = Task.Run(async () =>
+            try
             {
-                await Task.Delay(TimeSpan.FromMinutes(2));
-                await UpdateStatusAsync(order.Id, OrderStatus.Preparing);
-
-                var maxPrep = order.OrderItems.Select(i => (
-                    _unitOfWork.Repository<MenuItem>().GetByIdAsync(i.MenuItemId).Result?.PreparationTimeInMinutes ?? 0)).Max();
-
-                await Task.Delay(TimeSpan.FromMinutes(maxPrep));
-                await UpdateStatusAsync(order.Id, OrderStatus.Ready);
-            });
+                // Queue the order for progression
+                await _orderProgression.QueueOrderProgressionAsync(order.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to queue order {OrderId} for progression", order.Id);
+                // Don't throw - order is still created successfully
+            }
 
             return order.Id;
         }
@@ -128,12 +128,25 @@ namespace ITI.Resturant.Management.Application.Services
         public async Task<DateTime> EstimateDeliveryTimeAsync(Order order)
         {
             var now = DateTime.Now;
-            var maxPrep = order.OrderItems.Select(i => (
-                _unitOfWork.Repository<MenuItem>().GetByIdAsync(i.MenuItemId).Result?.PreparationTimeInMinutes ?? 0)).Max();
+            var maxPrep = await GetEstimatedPreparationTimeAsync(order);
             var estimated = now.AddMinutes(maxPrep);
             if (order.OrderType == OrderType.Delivery)
                 estimated = estimated.AddMinutes(30);
             return estimated;
+        }
+
+        public async Task<int> GetEstimatedPreparationTimeAsync(Order order)
+        {
+            var times = new List<int>();
+            foreach (var item in order.OrderItems)
+            {
+                var menuItem = await _unitOfWork.Repository<MenuItem>().GetByIdAsync(item.MenuItemId);
+                if (menuItem != null)
+                {
+                    times.Add(menuItem.PreparationTimeInMinutes);
+                }
+            }
+            return times.DefaultIfEmpty(0).Max();
         }
 
         public async Task<IEnumerable<Order>> GetOrdersByDateRangeAsync(DateTime start, DateTime end)

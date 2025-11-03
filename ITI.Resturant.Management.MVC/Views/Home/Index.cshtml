@@ -407,17 +407,17 @@
                 @foreach (var category in Model.Categories.Take(6))
                 {
                     <div class="col-md-4 mb-4">
-                        <a asp-controller="Menu" asp-action="index" asp-fragment="@category.Name" class="text-decoration-none">
+                        <a asp-controller="Menu" asp-fragment="@category.Name" class="text-decoration-none">
                             <div class="category-card">
-                                <span class="category-badge">
-                                    @{
-                                        var catIcon = "";
-                                        if (!string.IsNullOrWhiteSpace(category.IconClass))
-                                        {
-                                            var raw = category.IconClass.Trim();
-                                            catIcon = raw.Contains("fa ") ? raw : ($"fas {raw}");
-                                        }
+                                @{
+                                    var catIcon = "";
+                                    if (!string.IsNullOrWhiteSpace(category.IconClass))
+                                    {
+                                        var raw = category.IconClass;
+                                        catIcon = raw.Contains("fa ") ? raw : ($"fas {raw}");
                                     }
+                                }
+                                <span class="category-badge">
                                     @if (!string.IsNullOrEmpty(category.IconClass))
                                     {
                                         <i class="@catIcon"></i>
@@ -436,8 +436,10 @@
                                 </div>
                                 <div class="category-content">
                                     <h5>
-                                        
-                                        <i class="@catIcon me-2"></i>
+                                        @if (!string.IsNullOrEmpty(category.IconClass))
+                                        {
+                                            <i class="@catIcon me-2"></i>
+                                        }
                                         @category.Name
                                     </h5>
                                     <p class="text-muted mb-0">@category.Description</p>

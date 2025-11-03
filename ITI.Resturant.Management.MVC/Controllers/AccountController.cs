@@ -67,6 +67,14 @@ namespace ITI.Resturant.Management.MVC.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        // GET Register - return the view for registration
+        [HttpGet]
+        public IActionResult Register(string? returnUrl = null)
+        {
+            ViewData["ReturnUrl"] = returnUrl;
+            return View(new RegisterDto());
+        }
+
         // Update Register method similarly
         [HttpPost]
         [ValidateAntiForgeryToken]

@@ -151,6 +151,15 @@
         background: #f4a261;
         width: 66%;
     }
+    /* Enhance togglePassword style to be inside the input */
+    #togglePassword, #toggleConfirmPassword {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+    }
+    
 
     .strength-strong {
         background: #52b788;
@@ -273,7 +282,7 @@
                 </div>
 
                 <div class="register-link">
-                    Already have an account? <a asp-action="Login">Sign In</a>
+                    Already have an account? <a asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]">Sign In</a>
                 </div>
             </form>
         </div>

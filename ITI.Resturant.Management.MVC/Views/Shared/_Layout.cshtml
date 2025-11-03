@@ -293,7 +293,12 @@
                                         <li><a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index"><i class="fas fa-tachometer-alt"></i> Admin Dashboard</a></li>
                                     }
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                                        </form>
+                                    </li>
                                 </ul>
                             </li>
                         }

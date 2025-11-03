@@ -1,17 +1,17 @@
+@using ITI.Resturant.Management.Domain.Entities.Menu
 @model List<MenuItem>
 @{
     ViewData["Title"] = "Manage Menu";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
     var categories = ViewData["Categories"] as List<MenuCategory> ?? new List<MenuCategory>();
     var currentPage = (int)(ViewData["CurrentPage"] ?? 1);
     var pageSize = (int)(ViewData["PageSize"] ?? 20);
-    var total = Model.Count;
+    var total = Model?.Count ?? 0;
     var totalPages = (int)Math.Ceiling((double)total / pageSize);
     var search = ViewData["Search"] as string ?? string.Empty;
     var categoryFilter = ViewData["CategoryFilter"] as int?;
 }
 
-@inject IImageUrlResolver ImageUrlResolver
+@inject IImageUrlResolver imageUrlResolver;
 
 <div class="container-fluid py-4">
     <!-- Success/Error Messages -->
@@ -55,7 +55,7 @@
     <!-- Search and Filter Section -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <form method="get" class="row g-3 align-items-end">
+            <form method="get" asp-area="Admin" asp-controller="MenuItems" asp-action="ManageMenu" class="row g-3 align-items-end">
                 <div class="col-md-4">
                     <label for="searchInput" class="form-label">Search</label>
                     <div class="input-group">
@@ -192,8 +192,8 @@
                 @if (Model != null && Model.Any())
                 {
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="selectAll">
-                        <label class="form-check-label" for="selectAll">
+                        <input class="form-check-input" type="checkbox" id="selectAllCheckbox">
+                        <label class="form-check-label" for="selectAllCheckbox">
                             Select All
                         </label>
                     </div>
@@ -206,7 +206,7 @@
                     <thead class="table-light">
                         <tr>
                             <th style="width: 40px;">
-                                <input type="checkbox" class="form-check-input" id="selectAllCheckbox" />
+                                <span class="visually-hidden">Select</span>
                             </th>
                             <th style="width: 100px;">Image</th>
                             <th>Name</th>
@@ -251,10 +251,7 @@
                                     <td>
                                         @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
                                         {
-                                            <img src="@ImageUrlResolver.Resolve(item.ImageUrl)"
-                                                 alt="@item.Name"
-                                                 class="img-thumbnail"
-                                                 style="max-height: 70px; max-width: 70px; object-fit: cover;" />
+                                            <image-resolver src="@item.ImageUrl" alt="@item.Name" class="img-thumbnail" style="max-height: 70px; max-width: 70px; object-fit: cover;" />
                                         }
                                         else
                                         {
@@ -458,20 +455,20 @@
                 modal.find('#itemName').text(itemName);
             });
 
-            // Toggle Availability
+            // Toggle Availability - FIXED
             $('.toggle-availability').on('click', function() {
                 var btn = $(this);
                 var itemId = btn.data('id');
                 var statusDiv = $('#status-' + itemId);
 
                 btn.prop('disabled', true);
+                btn.html('<i class="fas fa-spinner fa-spin"></i>');
 
                 $.ajax({
-                    url: '@Url.Action("ToggleAvailability", "MenuItems", new { area = "Admin" })',
+                    url: '@Url.Action("ToggleAvailability", "MenuItems", new { area = "Admin" })/' + itemId,
                     type: 'POST',
-                    data: {
-                        id: itemId,
-                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
                     },
                     success: function(response) {
                         if (response.success) {
@@ -480,18 +477,18 @@
                             } else {
                                 statusDiv.html('<span class="badge bg-warning text-dark"><i class="fas fa-times me-1"></i>Unavailable</span>');
                             }
-
-                            // Show toast notification
                             showToast(response.message, 'success');
                         } else {
-                            showToast(response.message, 'error');
+                            showToast(response.message || 'Failed to toggle availability', 'error');
                         }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
                         showToast('An error occurred. Please try again.', 'error');
                     },
                     complete: function() {
                         btn.prop('disabled', false);
+                        btn.html('<i class="fas fa-toggle-on"></i>');
                     }
                 });
             });
@@ -561,6 +558,13 @@
                     toast.alert('close');
                 }, 3000);
             }
+
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').fadeOut('slow', function() {
+                    $(this).remove();
+                });
+            }, 5000);
         });
     </script>
 }

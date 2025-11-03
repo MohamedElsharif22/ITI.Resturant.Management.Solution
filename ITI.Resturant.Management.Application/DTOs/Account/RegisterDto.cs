@@ -19,5 +19,7 @@ namespace ITI.Resturant.Management.Application.DTOs.Account
 
         [Required]
         public string Password { get; set; } = string.Empty;
+        [Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
+        public string ConfirmPassword { get; set; } = string.Empty;
     }
 }

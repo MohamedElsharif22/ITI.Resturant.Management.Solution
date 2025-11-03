@@ -1,49 +1,544 @@
+@using ITI.Resturant.Management.Domain.Entities.Enums
 @model ITI.Resturant.Management.Domain.Entities.Order_.Order
-
 @{
-    ViewData["Title"] = "Order Details";
+    ViewData["Title"] = $"Order #{Model.Id}";
+    var isAdmin = User.IsInRole("Admin");
 }
 
-<h2>Order #@Model.Id</h2>
-<p>Status: <strong>@Model.Status</strong></p>
-<p>Placed: @Model.OrderDate</p>
-<p>Customer: @Model.CustomerName</p>
-<p>Phone: @Model.CustomerPhone</p>
-@if(Model.OrderType == ITI.Resturant.Management.Domain.Entities.Enums.OrderType.Delivery){
-    <p>Delivery Address: @Model.DeliveryAddress</p>
-}
+<style>
+    .order-details-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
 
-<h4>Items</h4>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Item</th>
-            <th>Qty</th>
-            <th>Unit</th>
-            <th>Subtotal</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach(var it in Model.OrderItems)
-        {
-            <tr>
-                <td>@it.MenuItem?.Name ?? it.MenuItemId.ToString()</td>
-                <td>@it.Quantity</td>
-                <td>@it.UnitPrice.ToString("C")</td>
-                <td>@it.Subtotal.ToString("C")</td>
-            </tr>
+        .order-details-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
         }
-    </tbody>
-</table>
 
-<div class="card p-3">
-    <p>Subtotal: @Model.Subtotal.ToString("C")</p>
-    <p>Tax: @Model.Tax.ToString("C")</p>
-    <p>Discount: @Model.Discount.ToString("C")</p>
-    <h4>Total: @Model.Total.ToString("C")</h4>
+    .header-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .status-badge-large {
+        padding: 0.8rem 2rem;
+        border-radius: 30px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    @@media (max-width: 992px) {
+        .details-grid
+
+    {
+        grid-template-columns: 1fr;
+    }
+
+    }
+
+    .info-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 3px solid var(--accent-color);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+        .section-title i {
+            color: var(--primary-color);
+        }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+    .info-label {
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
+    .info-value {
+        color: var(--primary-dark);
+        font-weight: 700;
+        text-align: right;
+    }
+
+    .order-item {
+        display: flex;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        background: rgba(64, 145, 108, 0.03);
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        border: 2px solid rgba(64, 145, 108, 0.1);
+        transition: all 0.3s ease;
+    }
+
+        .order-item:hover {
+            background: rgba(64, 145, 108, 0.08);
+            border-color: rgba(64, 145, 108, 0.3);
+            transform: translateX(5px);
+        }
+
+    .item-image {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 10px;
+        flex-shrink: 0;
+    }
+
+    .item-details {
+        flex-grow: 1;
+    }
+
+    .item-name {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin-bottom: 0.5rem;
+    }
+
+    .item-meta {
+        display: flex;
+        gap: 1.5rem;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .item-price-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .unit-price {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .item-subtotal {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--accent-light);
+    }
+
+    .summary-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        position: sticky;
+        top: 20px;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid #e0e0e0;
+        font-size: 1.1rem;
+    }
+
+        .summary-row.subtotal {
+            font-size: 1.2rem;
+        }
+
+        .summary-row.total {
+            border-bottom: none;
+            border-top: 3px solid var(--primary-color);
+            padding-top: 1.5rem;
+            margin-top: 1rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+
+    .summary-label {
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
+    .summary-value {
+        font-weight: 700;
+        color: var(--primary-dark);
+    }
+
+        .summary-value.discount {
+            color: #52b788;
+        }
+
+        .summary-value.tax {
+            color: var(--accent-color);
+        }
+
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 10px;
+            bottom: 10px;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--primary-color), var(--primary-light));
+        }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 2rem;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -2rem;
+        width: 20px;
+        height: 20px;
+        background: white;
+        border: 3px solid var(--primary-color);
+        border-radius: 50%;
+        z-index: 1;
+    }
+
+        .timeline-marker.active {
+            background: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(45, 106, 79, 0.2);
+        }
+
+    .timeline-content {
+        background: rgba(64, 145, 108, 0.05);
+        padding: 1rem;
+        border-radius: 10px;
+        border-left: 3px solid var(--primary-color);
+    }
+
+        .timeline-content h6 {
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .timeline-content small {
+            color: var(--text-muted);
+        }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 2rem;
+    }
+
+        .action-buttons .btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 1rem 2rem;
+            font-weight: 600;
+            border-radius: 10px;
+            font-size: 1.05rem;
+        }
+
+    .print-btn {
+        background: white;
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+    }
+
+        .print-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+    @@media print {
+        .no-print
+
+    {
+        display: none !important;
+    }
+
+    .info-section, .summary-card {
+        box-shadow: none !important;
+        border: 1px solid #ddd;
+    }
+
+    }
+</style>
+
+<div class="order-details-header no-print">
+    <h1><i class="fas fa-receipt"></i> Order #@Model.Id</h1>
+    <div class="header-info">
+        <div>
+            <i class="fas fa-calendar-alt"></i> @Model.OrderDate.ToString("MMMM dd, yyyy - hh:mm tt")
+        </div>
+        <span class="status-badge-large status-@Model.Status.ToString().ToLower()">
+            @Model.Status
+        </span>
+    </div>
 </div>
 
-<form asp-action="Cancel" method="post">
-    <input type="hidden" name="id" value="@Model.Id" />
-    <button class="btn btn-danger" type="submit" @(Model.Status==ITI.Resturant.Management.Domain.Entities.Enums.OrderStatus.Ready || Model.Status==ITI.Resturant.Management.Domain.Entities.Enums.OrderStatus.Delivered ? "disabled" : "")>Cancel Order</button>
-</form>
+<div class="details-grid">
+    <!-- Left Column: Order Information & Items -->
+    <div>
+        <!-- Customer Information -->
+        <div class="info-section">
+            <h3 class="section-title">
+                <i class="fas fa-user"></i> Customer Information
+            </h3>
+            <div class="info-row">
+                <span class="info-label">Name:</span>
+                <span class="info-value">@Model.CustomerName</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Phone:</span>
+                <span class="info-value">@Model.CustomerPhone</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Email:</span>
+                <span class="info-value">@Model.CustomerEmail</span>
+            </div>
+        </div>
+
+        <!-- Order Information -->
+        <div class="info-section">
+            <h3 class="section-title">
+                <i class="fas fa-info-circle"></i> Order Information
+            </h3>
+            <div class="info-row">
+                <span class="info-label">Order Type:</span>
+                <span class="info-value">
+                    <i class="fas fa-@(Model.OrderType == OrderType.DineIn ? "utensils" :
+                                                              Model.OrderType == OrderType.TakeOut ? "shopping-bag" :
+                                                              Model.OrderType == OrderType.Delivery ? "truck" : "laptop")"></i>
+                    @Model.OrderType
+                </span>
+            </div>
+            @if (Model.OrderType == OrderType.Delivery)
+            {
+                <div class="info-row">
+                    <span class="info-label">Delivery Address:</span>
+                    <span class="info-value">@Model.DeliveryAddress</span>
+                </div>
+            }
+            @if (Model.EstimatedDeliveryTime.HasValue)
+            {
+                <div class="info-row">
+                    <span class="info-label">Estimated Time:</span>
+                    <span class="info-value">@Model.EstimatedDeliveryTime.Value.ToString("hh:mm tt")</span>
+                </div>
+            }
+            @if (Model.CustomerDiscountType != CustomerDiscountType.None)
+            {
+                <div class="info-row">
+                    <span class="info-label">Discount Type:</span>
+                    <span class="info-value">
+                        <i class="fas fa-@(Model.CustomerDiscountType == CustomerDiscountType.Student ? "graduation-cap" : "user-clock")"></i>
+                        @Model.CustomerDiscountType (15% off)
+                    </span>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.SpecialInstructions))
+            {
+                <div class="info-row">
+                    <span class="info-label">Special Instructions:</span>
+                    <span class="info-value">@Model.SpecialInstructions</span>
+                </div>
+            }
+        </div>
+
+        <!-- Order Items -->
+        <div class="info-section">
+            <h3 class="section-title">
+                <i class="fas fa-list"></i> Order Items (@Model.OrderItems.Count)
+            </h3>
+            @foreach (var item in Model.OrderItems)
+            {
+                <div class="order-item">
+                    <img src="@(string.IsNullOrEmpty(item.MenuItem?.ImageUrl) ? "https://via.placeholder.com/100" : item.MenuItem.ImageUrl)"
+                         alt="@item.MenuItem?.Name"
+                         class="item-image">
+                    <div class="item-details">
+                        <div class="item-name">@item.MenuItem?.Name</div>
+                        <div class="item-meta">
+                            <span><i class="fas fa-layer-group"></i> Quantity: <strong>@item.Quantity</strong></span>
+                            <span><i class="fas fa-dollar-sign"></i> Unit Price: <strong>$@item.UnitPrice.ToString("F2")</strong></span>
+                        </div>
+                        <div class="item-price-info">
+                            <span class="unit-price">@item.Quantity x $@item.UnitPrice.ToString("F2")</span>
+                            <span class="item-subtotal">$@item.Subtotal.ToString("F2")</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Right Column: Summary & Actions -->
+    <div>
+        <!-- Order Summary -->
+        <div class="summary-card">
+            <h3 class="section-title">
+                <i class="fas fa-calculator"></i> Order Summary
+            </h3>
+
+            <div class="summary-row subtotal">
+                <span class="summary-label">Subtotal:</span>
+                <span class="summary-value">$@Model.Subtotal.ToString("F2")</span>
+            </div>
+
+            @if (Model.Discount > 0)
+            {
+                <div class="summary-row">
+                    <span class="summary-label">Discount:</span>
+                    <span class="summary-value discount">-$@Model.Discount.ToString("F2")</span>
+                </div>
+            }
+
+            <div class="summary-row">
+                <span class="summary-label">Tax (8.5%):</span>
+                <span class="summary-value tax">$@Model.Tax.ToString("F2")</span>
+            </div>
+
+            <div class="summary-row total">
+                <span>Total:</span>
+                <span>$@Model.Total.ToString("F2")</span>
+            </div>
+        </div>
+
+        <!-- Order Status Timeline -->
+        <div class="info-section mt-3">
+            <h3 class="section-title">
+                <i class="fas fa-tasks"></i> Order Status
+            </h3>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-marker @(Model.Status >= OrderStatus.Pending ? "active" : "")"></div>
+                    <div class="timeline-content">
+                        <h6>Order Placed</h6>
+                        <small>@Model.OrderDate.ToString("MMM dd, hh:mm tt")</small>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker @(Model.Status >= OrderStatus.Confirmed ? "active" : "")"></div>
+                    <div class="timeline-content">
+                        <h6>Confirmed</h6>
+                        <small>@(Model.Status >= OrderStatus.Confirmed ? "Order confirmed" : "Awaiting confirmation")</small>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker @(Model.Status >= OrderStatus.Preparing ? "active" : "")"></div>
+                    <div class="timeline-content">
+                        <h6>Preparing</h6>
+                        <small>@(Model.Status >= OrderStatus.Preparing ? "Being prepared" : "Not started")</small>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker @(Model.Status >= OrderStatus.Ready ? "active" : "")"></div>
+                    <div class="timeline-content">
+                        <h6>Ready</h6>
+                        <small>@(Model.Status >= OrderStatus.Ready ? "Ready for pickup/delivery" : "In progress")</small>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker @(Model.Status == OrderStatus.Delivered ? "active" : "")"></div>
+                    <div class="timeline-content">
+                        <h6>@(Model.OrderType == OrderType.Delivery ? "Delivered" : "Completed")</h6>
+                        <small>@(Model.Status == OrderStatus.Delivered ? "Order completed" : "Pending")</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="action-buttons no-print">
+            <button onclick="window.print()" class="btn print-btn">
+                <i class="fas fa-print"></i> Print Order
+            </button>
+
+            <a asp-action="Index" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Back to Orders
+            </a>
+
+            @if (Model.Status == OrderStatus.Pending ||
+                        Model.Status == OrderStatus.Confirmed ||
+                        Model.Status == OrderStatus.Preparing)
+            {
+                <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Are you sure you want to cancel this order?');" class="w-100">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="fas fa-times"></i> Cancel Order
+                    </button>
+                </form>
+            }
+
+            @if (isAdmin && (Model.Status == OrderStatus.Pending ||
+                        Model.Status == OrderStatus.Preparing ||
+                        Model.Status == OrderStatus.Ready))
+            {
+                <form asp-action="UpdateStatus" method="post" class="w-100">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    @{
+                        var nextStatus = Model.Status == OrderStatus.Pending ? OrderStatus.Preparing :
+                        Model.Status == OrderStatus.Preparing ? OrderStatus.Ready :
+                        OrderStatus.Delivered;
+                    }
+                <input type="hidden" name="status" value="@((int)nextStatus)" />
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="fas fa-arrow-right"></i>
+                    @(Model.Status == OrderStatus.Pending ? "Start Preparing" :
+                                        Model.Status == OrderStatus.Preparing ? "Mark as Ready" :
+                                        "Mark as Delivered")
+                </button>
+            </form>
+                        }
+        </div>
+    </div>
+</div>

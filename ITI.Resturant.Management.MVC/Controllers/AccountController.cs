@@ -3,6 +3,7 @@ using ITI.Resturant.Management.Domain.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ITI.Resturant.Management.MVC.Controllers
 {
@@ -22,11 +23,7 @@ namespace ITI.Resturant.Management.MVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginDto dto, string? returnUrl = null)
         {
-            if (!ModelState.IsValid)
-            {
-                ViewData["ReturnUrl"] = returnUrl;
-                return View(dto);
-            }
+            if (!ModelState.IsValid) return View(dto);
 
             ApplicationUser? user = null;
             if (!string.IsNullOrWhiteSpace(dto.Email))
@@ -42,7 +39,6 @@ namespace ITI.Resturant.Management.MVC.Controllers
             if (user == null)
             {
                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                ViewData["ReturnUrl"] = returnUrl;
                 return View(dto);
             }
 
@@ -50,7 +46,6 @@ namespace ITI.Resturant.Management.MVC.Controllers
             if (!passwordValid)
             {
                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                ViewData["ReturnUrl"] = returnUrl;
                 return View(dto);
             }
 
@@ -72,23 +67,12 @@ namespace ITI.Resturant.Management.MVC.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        [HttpGet]
-        public IActionResult Register(string? returnUrl = null)
-        {
-            ViewData["ReturnUrl"] = returnUrl;
-            return View(new RegisterDto());
-        }
-
         // Update Register method similarly
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterDto dto, string? returnUrl = null)
         {
-            if (!ModelState.IsValid)
-            {
-                ViewData["ReturnUrl"] = returnUrl;
-                return View(dto);
-            }
+            if (!ModelState.IsValid) return View(dto);
 
             var user = new ApplicationUser
             {
@@ -105,7 +89,6 @@ namespace ITI.Resturant.Management.MVC.Controllers
                 {
                     ModelState.AddModelError(string.Empty, err.Description);
                 }
-                ViewData["ReturnUrl"] = returnUrl;
                 return View(dto);
             }
 
@@ -123,16 +106,30 @@ namespace ITI.Resturant.Management.MVC.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        // Profile action to serve Views/Account/Profile.cshtml
         [HttpGet]
-        public async Task<IActionResult> Logout()
+        [Authorize]
+        public async Task<IActionResult> Profile()
         {
-            await _signInManager.SignOutAsync();
-            return RedirectToAction("Index", "Home");
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                // If user not found, redirect to login
+                return RedirectToAction("Login");
+            }
+
+            ViewData["Email"] = user.Email ?? string.Empty;
+            ViewData["UserName"] = user.UserName ?? string.Empty;
+            ViewData["FirstName"] = user.FirstName ?? string.Empty;
+            ViewData["LastName"] = user.LastName ?? string.Empty;
+
+            return View();
         }
 
+        // Optional: Logout action referenced by the Profile view
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LogoutPost()
+        public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");

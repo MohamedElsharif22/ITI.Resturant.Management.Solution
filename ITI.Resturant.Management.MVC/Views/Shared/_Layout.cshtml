@@ -268,15 +268,14 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Order" asp-action="Create">
+                            <a class="nav-link" asp-area="" asp-controller="Order" asp-action="Create">
                                 <i class="fas fa-shopping-bag"></i> Order Now
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link cart-icon" asp-controller="Cart" asp-action="Index">
+                            <a class="nav-link cart-icon" href="#" id="cartLink" onclick="handleCartClick(event)">
                                 <i class="fas fa-shopping-cart"></i> Cart
                                 <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
-                                <partial name="_MiniCart" />
                             </a>
                         </li>
                         @if (User.Identity?.IsAuthenticated == true)
@@ -398,11 +397,6 @@
                     } else {
                         badge.style.display = 'none';
                     }
-
-                    // Update mini cart if function exists
-                    if (typeof updateMiniCart === 'function') {
-                        updateMiniCart();
-                    }
                 })
                 .catch(err => console.error('Error updating cart badge:', err));
         }
@@ -416,7 +410,10 @@
         });
 
         // Cart link click handler
-        // Removed - now using asp-controller route
+        document.getElementById('cartLink')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = '/Order/Create';
+        });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

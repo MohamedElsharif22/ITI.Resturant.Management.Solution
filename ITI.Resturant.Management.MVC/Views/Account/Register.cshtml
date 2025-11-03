@@ -250,12 +250,12 @@
                     </div>
                 </div>
 
-              @*   <div class="form-floating mb-3 input-icon">
+                <div class="form-floating mb-3 input-icon">
                     <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Confirm Password" id="confirmPasswordInput" />
                     <label asp-for="ConfirmPassword">Confirm Password</label>
                     <i class="fas fa-eye" id="toggleConfirmPassword" style="cursor: pointer;" onclick="toggleConfirmPasswordVisibility()"></i>
                     <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                </div> *@
+                </div>
 
                 <div class="form-check mb-3">
                     <input class="form-check-input" type="checkbox" id="agreeTerms" required>
@@ -273,7 +273,7 @@
                 </div>
 
                 <div class="register-link">
-                    Already have an account? <a asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]">Sign In</a>
+                    Already have an account? <a asp-action="Login">Sign In</a>
                 </div>
             </form>
         </div>

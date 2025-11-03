@@ -1,0 +1,375 @@
+@{
+    ViewData["Title"] = "My Profile";
+    var email = ViewData["Email"]?.ToString() ?? "";
+    var userName = ViewData["UserName"]?.ToString() ?? "";
+    var firstName = ViewData["FirstName"]?.ToString() ?? "";
+    var lastName = ViewData["LastName"]?.ToString() ?? "";
+}
+
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+        color: white;
+        padding: 3rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .profile-avatar {
+        width: 150px;
+        height: 150px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 4rem;
+        color: var(--primary-color);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .profile-name {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+
+    .profile-email {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    .profile-content {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 2rem;
+    }
+
+    @@media (max-width: 992px) {
+        .profile-content
+
+    {
+        grid-template-columns: 1fr;
+    }
+
+    }
+
+    .profile-sidebar {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        height: fit-content;
+    }
+
+    .sidebar-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+        .sidebar-menu li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            color: var(--text-dark);
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+            .sidebar-menu a:hover {
+                background: rgba(64, 145, 108, 0.1);
+                color: var(--primary-color);
+                transform: translateX(5px);
+            }
+
+            .sidebar-menu a.active {
+                background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+                color: white;
+            }
+
+        .sidebar-menu i {
+            width: 25px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+    .profile-main {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    .section-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 3px solid var(--accent-color);
+    }
+
+    .info-grid {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .info-item {
+        padding: 1.5rem;
+        background: rgba(64, 145, 108, 0.03);
+        border-radius: 12px;
+        border: 2px solid rgba(64, 145, 108, 0.1);
+        transition: all 0.3s ease;
+    }
+
+        .info-item:hover {
+            background: rgba(64, 145, 108, 0.08);
+            border-color: rgba(64, 145, 108, 0.3);
+        }
+
+    .info-label {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        font-size: 1.2rem;
+        color: var(--primary-dark);
+        font-weight: 700;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, rgba(45, 106, 79, 0.1), rgba(64, 145, 108, 0.1));
+        padding: 2rem;
+        border-radius: 12px;
+        text-align: center;
+        border: 2px solid rgba(64, 145, 108, 0.2);
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 1.8rem;
+        color: white;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--primary-dark);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 2rem;
+    }
+
+        .action-buttons .btn {
+            padding: 1rem 2rem;
+            font-weight: 600;
+            border-radius: 10px;
+        }
+</style>
+
+<div class="profile-header">
+    <div class="profile-avatar">
+        <i class="fas fa-user"></i>
+    </div>
+    <h1 class="profile-name">@firstName @lastName</h1>
+    <p class="profile-email">@@@userName</p>
+</div>
+
+<div class="profile-content">
+    <!-- Sidebar Navigation -->
+    <div class="profile-sidebar">
+        <ul class="sidebar-menu">
+            <li>
+                <a href="#" class="active">
+                    <i class="fas fa-user"></i>
+                    <span>Profile Information</span>
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Order" asp-action="Index">
+                    <i class="fas fa-receipt"></i>
+                    <span>My Orders</span>
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class="fas fa-heart"></i>
+                    <span>Favorites</span>
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Saved Addresses</span>
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Methods</span>
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class="fas fa-lock"></i>
+                    <span>Security</span>
+                </a>
+            </li>
+            <li>
+                <a asp-controller="Account" asp-action="Logout" class="text-danger">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="profile-main">
+        <h2 class="section-title">
+            <i class="fas fa-chart-line"></i> Account Overview
+        </h2>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="stat-value">0</div>
+                <div class="stat-label">Total Orders</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-value">0</div>
+                <div class="stat-label">Pending Orders</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="stat-value">0</div>
+                <div class="stat-label">Favorite Items</div>
+            </div>
+        </div>
+
+        <h2 class="section-title mt-4">
+            <i class="fas fa-user-circle"></i> Personal Information
+        </h2>
+
+        <!-- Profile Information -->
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">
+                    <i class="fas fa-user"></i> Full Name
+                </div>
+                <div class="info-value">@firstName @lastName</div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">
+                    <i class="fas fa-at"></i> Username
+                </div>
+                <div class="info-value">@userName</div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">
+                    <i class="fas fa-envelope"></i> Email Address
+                </div>
+                <div class="info-value">@email</div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">
+                    <i class="fas fa-calendar"></i> Member Since
+                </div>
+                <div class="info-value">@DateTime.Now.ToString("MMMM yyyy")</div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="editProfile()">
+                <i class="fas fa-edit"></i> Edit Profile
+            </button>
+            <button class="btn btn-outline-primary" onclick="changePassword()">
+                <i class="fas fa-key"></i> Change Password
+            </button>
+            <a asp-controller="Order" asp-action="Index" class="btn btn-accent">
+                <i class="fas fa-receipt"></i> View My Orders
+            </a>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="alert alert-info mt-4" role="alert">
+            <h5 class="alert-heading">
+                <i class="fas fa-info-circle"></i> Quick Tip
+            </h5>
+            <p class="mb-0">
+                Complete your profile to get personalized recommendations and exclusive offers tailored just for you!
+            </p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function editProfile() {
+            alert('Edit profile functionality coming soon!');
+        }
+
+        function changePassword() {
+            alert('Change password functionality coming soon!');
+        }
+    </script>
+}

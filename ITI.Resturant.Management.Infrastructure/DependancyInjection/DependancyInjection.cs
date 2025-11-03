@@ -15,6 +15,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ITI.Resturant.Management.Domain.Repositories.Contracts;
+using ITI.Resturant.Management.Infrastructure.Repositories;
+using ITI.Resturant.Management.Domain;
+using ITI.Resturant.Management.Application.Services;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace ITI.Resturant.Management.Infrastructure.DependancyInjection
 {
@@ -23,9 +29,20 @@ namespace ITI.Resturant.Management.Infrastructure.DependancyInjection
         public static IServiceCollection AddDbContextServices(this IServiceCollection services, IConfiguration configuration)
         {
             //Configure Context Services
+            var conn = configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<AppDbContext>(options =>
             {
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
+                if (string.IsNullOrWhiteSpace(conn))
+                {
+                    // Fallback to in-memory for development when connection string not provided
+                    options.UseInMemoryDatabase("AppDbInMemory");
+                }
+                else
+                {
+                    options.UseSqlServer(conn);
+                    // Prevent EF Core from throwing on pending model changes during Migrate in dev
+                    options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
+                }
             });
 
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -36,8 +53,6 @@ namespace ITI.Resturant.Management.Infrastructure.DependancyInjection
                 options.Password.RequireUppercase = true;
             }).AddEntityFrameworkStores<AppDbContext>();
 
-
-
             return services;
         }
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
@@ -45,6 +60,33 @@ namespace ITI.Resturant.Management.Infrastructure.DependancyInjection
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+
+            // unit of work and repositories
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IMenuRepository, MenuRepository>();
+            services.AddScoped<IOrderRepository, OrderRepository>();
+            services.AddMemoryCache();
+            services.AddScoped<ICartRepository, CartRepository>();
+
+            // Hosted services and background workers
+            services.AddHostedService<OrderProgressionHostedService>();
+
+            // Analytics service implementation
+            services.AddScoped<IAnalyticsService, AnalyticsService>();
+
+            // Application services
+            services.AddScoped<IMenuService, MenuService>();
+            services.AddScoped<IMenuCategoryService, MenuCategoryService>();
+            services.AddScoped<IOrderService, OrderService>();
+            services.AddScoped<IDiscountService, DiscountService>();
+            services.AddScoped<IPricingService, PricingService>();
+
+            // File upload service
+            services.AddScoped<IFileUploadService, FileUploadService>();
+
+            // Image URL resolver
+            services.AddSingleton<IImageUrlResolver, ImageUrlResolver>();
+
             return services;
         }
     }

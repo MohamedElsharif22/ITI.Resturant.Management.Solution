@@ -97,7 +97,7 @@ namespace ITI.Resturant.Management.Infrastructure._Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("PreparationTimeInMinuts")
+                    b.Property<int>("PreparationTimeInMinutes")
                         .HasColumnType("int");
 
                     b.Property<decimal>("Price")
@@ -125,6 +125,9 @@ namespace ITI.Resturant.Management.Infrastructure._Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<int>("CustomerDiscountType")
+                        .HasColumnType("int");
+
                     b.Property<string>("CustomerEmail")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -149,8 +152,8 @@ namespace ITI.Resturant.Management.Infrastructure._Data.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int?>("EstimatedDeliveryTime")
-                        .HasColumnType("int");
+                    b.Property<DateTime?>("EstimatedDeliveryTime")
+                        .HasColumnType("datetime2");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -213,6 +216,7 @@ namespace ITI.Resturant.Management.Infrastructure._Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Subtotal")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("UnitPrice")

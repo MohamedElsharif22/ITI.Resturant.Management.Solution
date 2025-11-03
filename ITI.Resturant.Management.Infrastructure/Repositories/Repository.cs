@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Byway.Infrastructure.Repositories
+namespace ITI.Resturant.Management.Infrastructure.Repositories
 {
     public class Repository<T> (AppDbContext context) : IRepository<T> where T : BaseEntity
     {

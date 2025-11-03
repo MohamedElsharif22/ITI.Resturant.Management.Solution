@@ -1,0 +1,566 @@
+@model List<MenuItem>
+@{
+    ViewData["Title"] = "Manage Menu";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var categories = ViewData["Categories"] as List<MenuCategory> ?? new List<MenuCategory>();
+    var currentPage = (int)(ViewData["CurrentPage"] ?? 1);
+    var pageSize = (int)(ViewData["PageSize"] ?? 20);
+    var total = Model.Count;
+    var totalPages = (int)Math.Ceiling((double)total / pageSize);
+    var search = ViewData["Search"] as string ?? string.Empty;
+    var categoryFilter = ViewData["CategoryFilter"] as int?;
+}
+
+@inject IImageUrlResolver ImageUrlResolver
+
+<div class="container-fluid py-4">
+    <!-- Success/Error Messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-utensils text-primary"></i> Manage Menu
+                    </h2>
+                    <p class="text-muted mb-0">Manage your restaurant menu items</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-danger" id="bulkDeleteBtn" style="display:none;">
+                        <i class="fas fa-trash me-1"></i> Delete Selected (<span id="selectedCount">0</span>)
+                    </button>
+                    <a class="btn btn-primary" asp-area="Admin" asp-controller="MenuItems" asp-action="CreateMenu">
+                        <i class="fas fa-plus me-1"></i> Add Menu Item
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="searchInput" class="form-label">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text"
+                               id="searchInput"
+                               name="search"
+                               value="@search"
+                               class="form-control"
+                               placeholder="Search by name or description..." />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label for="categorySelect" class="form-label">Category</label>
+                    <select name="categoryFilter" id="categorySelect" class="form-select">
+                        <option value="">All Categories</option>
+                        @foreach (var cat in categories)
+                        {
+                            <option value="@cat.Id" selected="@(categoryFilter.HasValue && categoryFilter.Value == cat.Id)">
+                                @cat.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="pageSizeSelect" class="form-label">Items per page</label>
+                    <select name="pageSize" id="pageSizeSelect" class="form-select">
+                        <option value="10" selected="@(pageSize == 10)">10</option>
+                        <option value="20" selected="@(pageSize == 20)">20</option>
+                        <option value="50" selected="@(pageSize == 50)">50</option>
+                        <option value="100" selected="@(pageSize == 100)">100</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i> Apply Filters
+                    </button>
+                    @if (!string.IsNullOrEmpty(search) || categoryFilter.HasValue)
+                    {
+                        <a asp-area="Admin" asp-controller="MenuItems" asp-action="ManageMenu" class="btn btn-outline-secondary w-100 mt-2">
+                            <i class="fas fa-times me-1"></i> Clear Filters
+                        </a>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded p-3">
+                                <i class="fas fa-list text-primary fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Total Items</h6>
+                            <h4 class="mb-0">@total</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 rounded p-3">
+                                <i class="fas fa-check-circle text-success fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Available</h6>
+                            <h4 class="mb-0">@(Model?.Count(m => m.IsAvailable) ?? 0)</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded p-3">
+                                <i class="fas fa-times-circle text-warning fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Unavailable</h6>
+                            <h4 class="mb-0">@(Model?.Count(m => !m.IsAvailable) ?? 0)</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 rounded p-3">
+                                <i class="fas fa-layer-group text-info fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Categories</h6>
+                            <h4 class="mb-0">@categories.Count</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu Items Table -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-table me-2"></i>Menu Items
+                    @if (!string.IsNullOrEmpty(search))
+                    {
+                        <small class="text-muted">- Search results for "@search"</small>
+                    }
+                </h5>
+                @if (Model != null && Model.Any())
+                {
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="selectAll">
+                        <label class="form-check-label" for="selectAll">
+                            Select All
+                        </label>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" class="form-check-input" id="selectAllCheckbox" />
+                            </th>
+                            <th style="width: 100px;">Image</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th style="width: 120px;">Prep Time</th>
+                            <th style="width: 100px;">Status</th>
+                            <th style="width: 280px;" class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model == null || !Model.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                        <h5>No menu items found</h5>
+                                        <p class="mb-3">
+                                            @if (!string.IsNullOrEmpty(search) || categoryFilter.HasValue)
+                                            {
+                                                <span>Try adjusting your filters or </span>
+                                            }
+                                            <span>start by adding your first menu item.</span>
+                                        </p>
+                                        <a asp-area="Admin" asp-controller="MenuItems" asp-action="CreateMenu" class="btn btn-primary">
+                                            <i class="fas fa-plus me-1"></i> Add Menu Item
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var item in Model)
+                            {
+                                var category = categories.FirstOrDefault(c => c.Id == item.CategoryId);
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" class="form-check-input item-checkbox" value="@item.Id" />
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                                        {
+                                            <img src="@ImageUrlResolver.Resolve(item.ImageUrl)"
+                                                 alt="@item.Name"
+                                                 class="img-thumbnail"
+                                                 style="max-height: 70px; max-width: 70px; object-fit: cover;" />
+                                        }
+                                        else
+                                        {
+                                            <div class="bg-light d-flex align-items-center justify-content-center rounded"
+                                                 style="width: 70px; height: 70px;">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">@item.Name</div>
+                                        @if (!string.IsNullOrWhiteSpace(item.Description))
+                                        {
+                                            <small class="text-muted d-block text-truncate" style="max-width: 300px;">
+                                                @item.Description
+                                            </small>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (category != null)
+                                        {
+                                            <span class="badge bg-secondary">@category.Name</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">@item.Price.ToString("C")</strong>
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-clock text-muted me-1"></i>
+                                        @item.PreparationTimeInMinutes min
+                                    </td>
+                                    <td>
+                                        <div id="status-@item.Id">
+                                            @if (item.IsAvailable)
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>Available
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="fas fa-times me-1"></i>Unavailable
+                                                </span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group" role="group">
+                                            <a class="btn btn-sm btn-outline-info"
+                                               asp-area="Admin"
+                                               asp-controller="MenuItems"
+                                               asp-action="Details"
+                                               asp-route-id="@item.Id"
+                                               title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a class="btn btn-sm btn-outline-primary"
+                                               asp-area="Admin"
+                                               asp-controller="MenuItems"
+                                               asp-action="EditMenu"
+                                               asp-route-id="@item.Id"
+                                               title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary toggle-availability"
+                                                    data-id="@item.Id"
+                                                    title="Toggle Availability">
+                                                <i class="fas fa-toggle-on"></i>
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deleteModal"
+                                                    data-id="@item.Id"
+                                                    data-name="@item.Name"
+                                                    title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        @if (totalPages > 1)
+        {
+            <div class="card-footer bg-white">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="text-muted">
+                        Showing @((currentPage - 1) * pageSize + 1) to @(Math.Min(currentPage * pageSize, total)) of @total items
+                    </div>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-area="Admin"
+                                   asp-controller="MenuItems"
+                                   asp-action="ManageMenu"
+                                   asp-route-page="@(currentPage - 1)"
+                                   asp-route-pageSize="@pageSize"
+                                   asp-route-search="@search"
+                                   asp-route-categoryFilter="@categoryFilter">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+
+                            @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link"
+                                       asp-area="Admin"
+                                       asp-controller="MenuItems"
+                                       asp-action="ManageMenu"
+                                       asp-route-page="@i"
+                                       asp-route-pageSize="@pageSize"
+                                       asp-route-search="@search"
+                                       asp-route-categoryFilter="@categoryFilter">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-area="Admin"
+                                   asp-controller="MenuItems"
+                                   asp-action="ManageMenu"
+                                   asp-route-page="@(currentPage + 1)"
+                                   asp-route-pageSize="@pageSize"
+                                   asp-route-search="@search"
+                                   asp-route-categoryFilter="@categoryFilter">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="itemName"></strong>?</p>
+                <p class="text-danger mb-0">
+                    <small><i class="fas fa-info-circle me-1"></i>This action cannot be undone.</small>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <form method="post" asp-area="Admin" asp-controller="MenuItems" asp-action="DeleteMenu">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="deleteItemId" />
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Delete Form -->
+<form method="post" id="bulkDeleteForm" asp-area="Admin" asp-controller="MenuItems" asp-action="BulkDelete" style="display:none;">
+    @Html.AntiForgeryToken()
+    <div id="bulkDeleteIds"></div>
+</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Delete Modal
+            $('#deleteModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var itemId = button.data('id');
+                var itemName = button.data('name');
+
+                var modal = $(this);
+                modal.find('#deleteItemId').val(itemId);
+                modal.find('#itemName').text(itemName);
+            });
+
+            // Toggle Availability
+            $('.toggle-availability').on('click', function() {
+                var btn = $(this);
+                var itemId = btn.data('id');
+                var statusDiv = $('#status-' + itemId);
+
+                btn.prop('disabled', true);
+
+                $.ajax({
+                    url: '@Url.Action("ToggleAvailability", "MenuItems", new { area = "Admin" })',
+                    type: 'POST',
+                    data: {
+                        id: itemId,
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            if (response.isAvailable) {
+                                statusDiv.html('<span class="badge bg-success"><i class="fas fa-check me-1"></i>Available</span>');
+                            } else {
+                                statusDiv.html('<span class="badge bg-warning text-dark"><i class="fas fa-times me-1"></i>Unavailable</span>');
+                            }
+
+                            // Show toast notification
+                            showToast(response.message, 'success');
+                        } else {
+                            showToast(response.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        showToast('An error occurred. Please try again.', 'error');
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false);
+                    }
+                });
+            });
+
+            // Select All Checkbox
+            $('#selectAllCheckbox').on('change', function() {
+                $('.item-checkbox').prop('checked', $(this).is(':checked'));
+                updateBulkDeleteButton();
+            });
+
+            // Individual Checkbox
+            $('.item-checkbox').on('change', function() {
+                updateBulkDeleteButton();
+                updateSelectAllCheckbox();
+            });
+
+            // Bulk Delete Button
+            $('#bulkDeleteBtn').on('click', function() {
+                var selectedIds = [];
+                $('.item-checkbox:checked').each(function() {
+                    selectedIds.push($(this).val());
+                });
+
+                if (selectedIds.length === 0) return;
+
+                if (confirm('Are you sure you want to delete ' + selectedIds.length + ' item(s)?')) {
+                    var form = $('#bulkDeleteForm');
+                    var idsContainer = $('#bulkDeleteIds');
+                    idsContainer.empty();
+
+                    selectedIds.forEach(function(id) {
+                        idsContainer.append('<input type="hidden" name="ids" value="' + id + '" />');
+                    });
+
+                    form.submit();
+                }
+            });
+
+            function updateBulkDeleteButton() {
+                var checkedCount = $('.item-checkbox:checked').length;
+                if (checkedCount > 0) {
+                    $('#bulkDeleteBtn').show();
+                    $('#selectedCount').text(checkedCount);
+                } else {
+                    $('#bulkDeleteBtn').hide();
+                }
+            }
+
+            function updateSelectAllCheckbox() {
+                var totalCheckboxes = $('.item-checkbox').length;
+                var checkedCheckboxes = $('.item-checkbox:checked').length;
+                $('#selectAllCheckbox').prop('checked', totalCheckboxes === checkedCheckboxes && totalCheckboxes > 0);
+            }
+
+            function showToast(message, type) {
+                var alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+                var icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+
+                var toast = $('<div class="alert ' + alertClass + ' alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3" style="z-index: 9999;" role="alert">' +
+                    '<i class="fas ' + icon + ' me-2"></i>' + message +
+                    '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                    '</div>');
+
+                $('body').append(toast);
+
+                setTimeout(function() {
+                    toast.alert('close');
+                }, 3000);
+            }
+        });
+    </script>
+}

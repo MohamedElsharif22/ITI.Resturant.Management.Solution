@@ -1,0 +1,60 @@
+@model ITI.Resturant.Management.Application.DTOs.Menu.MenuItemDto
+@{
+    ViewData["Title"] = "Create Menu Item";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var categories = ViewData["Categories"] as List<ITI.Resturant.Management.Domain.Entities.Menu.MenuCategory> ?? new List<ITI.Resturant.Management.Domain.Entities.Menu.MenuCategory>();
+}
+
+<h2>Create Menu Item</h2>
+
+<form method="post" enctype="multipart/form-data" asp-area="Admin" asp-controller="MenuItems" asp-action="CreateMenu">
+    @Html.AntiForgeryToken()
+    <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Price</label>
+            <input asp-for="Price" class="form-control" />
+            <span asp-validation-for="Price" class="text-danger"></span>
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Category</label>
+            <select asp-for="CategoryId" class="form-select">
+                <option value="">-- Select --</option>
+                @foreach (var c in categories)
+                {
+                    <option value="@c.Id">@c.Name</option>
+                }
+            </select>
+            <span asp-validation-for="CategoryId" class="text-danger"></span>
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Prep Time (min)</label>
+            <input asp-for="PreparationTimeInMinutes" class="form-control" />
+            <span asp-validation-for="PreparationTimeInMinutes" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="mb-3 form-check">
+        <input asp-for="IsAvailable" class="form-check-input" />
+        <label class="form-check-label">Available</label>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Image</label>
+        <input type="file" name="imageFile" class="form-control" accept="image/*" />
+        <span asp-validation-for="ImageUrl" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a asp-area="Admin" asp-controller="MenuItems" asp-action="ManageMenu" class="btn btn-secondary ms-2">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

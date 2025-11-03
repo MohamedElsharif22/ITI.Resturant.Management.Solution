@@ -1,0 +1,119 @@
+@model Microsoft.AspNetCore.Identity.IdentityRole
+@{
+    ViewData["Title"] = "Edit Role";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var members = ViewBag.Members as List<ITI.Resturant.Management.Domain.Identity.ApplicationUser> ?? new List<ITI.Resturant.Management.Domain.Identity.ApplicationUser>();
+    var allUsers = ViewBag.AllUsers as List<ITI.Resturant.Management.Domain.Identity.ApplicationUser> ?? new List<ITI.Resturant.Management.Domain.Identity.ApplicationUser>();
+}
+
+<h2>Edit Role - @Model.Name</h2>
+
+<form method="post" asp-area="Admin" asp-controller="Roles" asp-action="Edit">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.Id" />
+    <div class="mb-3">
+        <label class="form-label">Role Name</label>
+        <input type="text" name="name" class="form-control" value="@Model.Name" />
+        @if (ViewData.ModelState["Name"]?.Errors?.Count > 0)
+        {
+            <div class="text-danger">@ViewData.ModelState["Name"].Errors[0].ErrorMessage</div>
+        }
+    </div>
+    <button class="btn btn-primary">Save</button>
+    <a asp-area="Admin" asp-controller="Roles" asp-action="Index" class="btn btn-secondary ms-2">Back</a>
+</form>
+
+<hr />
+
+<h4>Role Members</h4>
+<ul id="membersList" class="list-group mb-3">
+    @foreach (var m in members)
+    {
+        <li class="list-group-item d-flex justify-content-between align-items-center" data-user-id="@m.Id">
+            <span>@m.UserName (@m.Email)</span>
+            <button class="btn btn-sm btn-outline-danger" onclick="removeUser('@m.Id')">Remove</button>
+        </li>
+    }
+</ul>
+
+<h4>Add Users to Role</h4>
+<div class="mb-3">
+    <select id="addUserSelect" class="form-select">
+        <option value="">-- select user --</option>
+        @foreach (var u in allUsers.Where(u => !members.Any(m => m.Id == u.Id)))
+        {
+            <option value="@u.Id">@u.UserName (@u.Email)</option>
+        }
+    </select>
+    <button class="btn btn-primary mt-2" onclick="addUser()">Add</button>
+</div>
+
+@section Scripts {
+    <script>
+        async function addUser() {
+            var select = document.getElementById('addUserSelect');
+            var userId = select.value;
+            if (!userId) return alert('Select a user to add.');
+
+            var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            var roleId = '@Model.Id';
+
+            try {
+                var res = await fetch('/Admin/Roles/AddUserToRole', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': token
+                    },
+                    body: 'userId=' + encodeURIComponent(userId) + '&roleId=' + encodeURIComponent(roleId)
+                });
+
+                if (!res.ok) throw new Error('Failed');
+                // update UI: move user from select to members list
+                var option = select.querySelector('option[value="' + userId + '"]');
+                var text = option ? option.text : userId;
+                // append to members list
+                var ul = document.getElementById('membersList');
+                var li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.setAttribute('data-user-id', userId);
+                li.innerHTML = '<span>' + text + '</span> <button class="btn btn-sm btn-outline-danger" onclick="removeUser(\'' + userId + '\')">Remove</button>';
+                ul.appendChild(li);
+                if (option) option.remove();
+            } catch (err) {
+                console.error(err);
+                alert('Could not add user to role.');
+            }
+        }
+
+        async function removeUser(userId) {
+            if (!confirm('Remove user from role?')) return;
+            var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            var roleId = '@Model.Id';
+
+            try {
+                var res = await fetch('/Admin/Roles/RemoveUserFromRole', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': token
+                    },
+                    body: 'userId=' + encodeURIComponent(userId) + '&roleId=' + encodeURIComponent(roleId)
+                });
+
+                if (!res.ok) throw new Error('Failed');
+                // remove from members list and add back to select
+                var ul = document.getElementById('membersList');
+                var items = Array.from(ul.children);
+                for (var i = 0; i < items.length; i++) {
+                    if (items[i].getAttribute('data-user-id') === userId) { items[i].remove(); break; }
+                }
+                // optionally reload page to refresh state
+                location.reload();
+            } catch (err) {
+                console.error(err);
+                alert('Could not remove user from role.');
+            }
+        }
+    </script>
+}

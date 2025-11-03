@@ -8,16 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Services\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="AutoMapper" Version="15.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ITI.Resturant.Management.Core\ITI.Resturant.Management.Domain.csproj" />
+    <ProjectReference Include="..\ITI.Resturant.Management.Domain\ITI.Resturant.Management.Domain.csproj" />
   </ItemGroup>
 
 </Project>

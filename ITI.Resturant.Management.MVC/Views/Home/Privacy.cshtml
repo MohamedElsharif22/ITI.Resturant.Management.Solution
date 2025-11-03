@@ -1,6 +1,246 @@
 ﻿@{
     ViewData["Title"] = "Privacy Policy";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<style>
+    .privacy-container {
+        background: white;
+        border-radius: 15px;
+        padding: 3rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        margin-bottom: 3rem;
+    }
+
+    .privacy-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding-bottom: 2rem;
+        border-bottom: 3px solid var(--accent-color);
+    }
+
+        .privacy-header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin-bottom: 1rem;
+        }
+
+        .privacy-header p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+    .privacy-section {
+        margin-bottom: 3rem;
+    }
+
+        .privacy-section h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+            .privacy-section h2 i {
+                color: var(--accent-color);
+            }
+
+        .privacy-section h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .privacy-section p {
+            color: var(--text-dark);
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .privacy-section ul {
+            margin-left: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+            .privacy-section ul li {
+                color: var(--text-dark);
+                line-height: 1.8;
+                margin-bottom: 0.5rem;
+            }
+
+    .highlight-box {
+        background: linear-gradient(135deg, rgba(64, 145, 108, 0.1), rgba(45, 106, 79, 0.1));
+        border-left: 4px solid var(--primary-color);
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 2rem 0;
+    }
+
+        .highlight-box strong {
+            color: var(--primary-dark);
+        }
+
+    .contact-box {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        margin-top: 3rem;
+    }
+
+        .contact-box h3 {
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .contact-box a {
+            color: var(--accent-color);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+            .contact-box a:hover {
+                color: white;
+            }
+</style>
+
+<div class="privacy-container">
+    <div class="privacy-header">
+        <h1><i class="fas fa-shield-alt"></i> Privacy Policy</h1>
+        <p class="lead">Last Updated: @DateTime.Now.ToString("MMMM dd, yyyy")</p>
+    </div>
+
+    <div class="privacy-section">
+        <h2><i class="fas fa-info-circle"></i> Introduction</h2>
+        <p>
+            Welcome to Delicious Restaurant. We respect your privacy and are committed to protecting your personal data.
+            This privacy policy will inform you about how we look after your personal data when you visit our website
+            or use our services, and tell you about your privacy rights and how the law protects you.
+        </p>
+    </div>
+
+    <div class="privacy-section">
+        <h2><i class="fas fa-database"></i> Information We Collect</h2>
+        <p>We may collect, use, store and transfer different kinds of personal data about you which we have grouped together as follows:</p>
+
+        <h3>Personal Information</h3>
+        <ul>
+            <li><strong>Identity Data:</strong> First name, last name, username</li>
+            <li><strong>Contact Data:</strong> Email address, telephone numbers, delivery address</li>
+            <li><strong>Transaction Data:</strong> Details about orders and payments you have made</li>
+            <li><strong>Technical Data:</strong> IP address, browser type and version, time zone setting and location</li>
+            <li><strong>Usage Data:</strong> Information about how you use our website and services</li>
+        </ul>
+
+        <div class="highlight-box">
+            <strong>Note:</strong> We do not collect any Special Categories of Personal Data about you
+            (this includes details about your race, ethnicity, religious beliefs, sexual orientation, health data, etc.).
+        </div>
+    </div>
+
+    <div class="privacy-section">
+        <h2><i class="fas fa-bullseye"></i> How We Use Your Information</h2>
+        <p>We will only use your personal data when the law allows us to. Most commonly, we will use your personal data in the following circumstances:</p>
+
+        <ul>
+            <li>To process and deliver your orders</li>
+            <li>To manage your account and provide customer service</li>
+            <li>To send you updates about your orders</li>
+            <li>To improve our website and services</li>
+            <li>To personalize your experience</li>
+            <li>To send promotional communications (with your consent)</li>
+            <li>To comply with legal obligations</li>
+        </ul>
+    </div>
+
+    <div class="privacy-section">
+        <h2><i class="fas fa-share-alt"></i> Data Sharing</h2>
+        <p>We may share your personal data with the following parties:</p>
+
+        <ul>
+            <li><strong>Service Providers:</strong> Third-party vendors who provide services on our behalf (e.g., payment processors, delivery services)</li>
+            <li><strong>Business Partners:</strong> Third parties to whom we may choose to sell, transfer, or merge parts of our business</li>
+            <li><strong>Legal Requirements:</strong> When required by law or to protect our rights</li>
+        </ul>
+
+        <div class="highlight-box">
+            <strong>Important:</strong> We require all third parties to respect the security of your personal data and to treat it in accordance with the law.
+        </div>
+    </div>
+
+    <div class="privacy-section">
+        <h2><i class="fas fa-lock"></i> Data Security</h2>
+        <p>
+            We have put in place appropriate security measures to prevent your personal data from being accidentally lost,
+            used or accessed in an unauthorized way, altered or disclosed. In addition, we limit access to your personal data
+            to those employees, agents, contractors and other third parties who have a business need to know.
+        </p>
+        <p>
+            We have put in place procedures to deal with any suspected personal data breach and will notify you and any
+            applicable regulator of a breach where we are legally required to do so.
+        </p>
+    </div>
+
+    <div class="privacy-section">
+        <h2><i class="fas fa-clock"></i> Data Retention</h2>
+        <p>
+            We will only retain your personal data for as long as necessary to fulfil the purposes we collected it for,
+            including for the purposes of satisfying any legal, accounting, or reporting requirements.
+        </p>
+        <p>
+            To determine the appropriate retention period for personal data, we consider the amount, nature, and sensitivity
+            of the personal data, the potential risk of harm from unauthorized use or disclosure, the purposes for which we
+            process your personal data and whether we can achieve those purposes through other means.
+        </p>
+    </div>
+
+    <div class="privacy-section">
+        <h2><i class="fas fa-user-shield"></i> Your Legal Rights</h2>
+        <p>Under certain circumstances, you have rights under data protection laws in relation to your personal data, including the right to:</p>
+
+        <ul>
+            <li><strong>Request access</strong> to your personal data</li>
+            <li><strong>Request correction</strong> of your personal data</li>
+            <li><strong>Request erasure</strong> of your personal data</li>
+            <li><strong>Object to processing</strong> of your personal data</li>
+            <li><strong>Request restriction</strong> of processing your personal data</li>
+            <li><strong>Request transfer</strong> of your personal data</li>
+            <li><strong>Withdraw consent</strong> at any time</li>
+        </ul>
+    </div>
+
+    <div class="privacy-section">
+        <h2><i class="fas fa-cookie-bite"></i> Cookies</h2>
+        <p>
+            Our website uses cookies to distinguish you from other users. This helps us to provide you with a good experience
+            when you browse our website and also allows us to improve our site. A cookie is a small file of letters and numbers
+            that we store on your browser or the hard drive of your computer.
+        </p>
+        <p>You can set your browser to refuse all or some browser cookies, or to alert you when websites set or access cookies.</p>
+    </div>
+
+    <div class="privacy-section">
+        <h2><i class="fas fa-edit"></i> Changes to This Policy</h2>
+        <p>
+            We may update this privacy policy from time to time. We will notify you of any changes by posting the new privacy
+            policy on this page and updating the "Last Updated" date at the top of this policy.
+        </p>
+    </div>
+
+    <div class="contact-box">
+        <h3><i class="fas fa-envelope"></i> Questions About This Policy?</h3>
+        <p>
+            If you have any questions about this privacy policy or our privacy practices, please contact us at:
+        </p>
+        <p>
+            <strong>Email:</strong> <a href="mailto:privacy@deliciousrestaurant.com">privacy@deliciousrestaurant.com</a><br>
+            <strong>Phone:</strong> <a href="tel:+15551234567">+1 (555) 123-4567</a>
+        </p>
+    </div>
+</div>

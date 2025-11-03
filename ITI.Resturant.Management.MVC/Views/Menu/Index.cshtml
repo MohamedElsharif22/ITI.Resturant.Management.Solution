@@ -1,0 +1,430 @@
+@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Our Menu";
+}
+
+<style>
+    .menu-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+        color: white;
+        padding: 3rem 0;
+        border-radius: 15px;
+        margin-bottom: 3rem;
+        text-align: center;
+    }
+
+        .menu-header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .menu-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+    .category-section {
+        margin-bottom: 4rem;
+    }
+
+    .category-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 3px solid var(--accent-color);
+    }
+
+    .category-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: white;
+        box-shadow: 0 5px 15px rgba(45, 106, 79, 0.3);
+    }
+
+    .category-header h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin: 0;
+    }
+
+    .category-description {
+        color: var(--text-muted);
+        font-size: 1rem;
+    }
+
+    .menu-item-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        margin-bottom: 2rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+        .menu-item-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+    .menu-item-image-container {
+        position: relative;
+        height: 220px;
+        overflow: hidden;
+    }
+
+    .menu-item-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .menu-item-card:hover .menu-item-image {
+        transform: scale(1.1);
+    }
+
+    .prep-time-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .availability-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+        .availability-badge.available {
+            background-color: #52b788;
+            color: white;
+        }
+
+        .availability-badge.unavailable {
+            background-color: #e76f51;
+            color: white;
+        }
+
+    .menu-item-content {
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+        .menu-item-content h5 {
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .menu-item-content p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            flex-grow: 1;
+        }
+
+    .menu-item-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .price-tag {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--accent-light);
+    }
+
+    .add-to-cart-btn {
+        padding: 0.6rem 1.5rem;
+        font-weight: 600;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+    }
+
+        .add-to-cart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(45, 106, 79, 0.3);
+        }
+
+    .no-items-message {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+        .no-items-message i {
+            font-size: 4rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+    .filter-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        margin-bottom: 2rem;
+    }
+
+    .daily-count-badge {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        background: rgba(244, 162, 97, 0.9);
+        color: white;
+        padding: 0.3rem 0.7rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+</style>
+
+<div class="menu-header">
+    <h1><i class="fas fa-book-open"></i> Our Menu</h1>
+    <p>Discover our delicious selection of handcrafted dishes</p>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    @foreach (var categoryGroup in Model)
+    {
+        var category = categoryGroup.Category;
+        var items = categoryGroup.Items;
+
+        @if (items.Any())
+        {
+            <div class="category-section">
+                <div class="category-header">
+                    <div class="category-icon">
+                        @if (!string.IsNullOrEmpty(category.IconClass))
+                        {
+                            <i class="@category.IconClass"></i>
+                        }
+                        else
+                        {
+                            <i class="fas fa-utensils"></i>
+                        }
+                    </div>
+                    <div>
+                        <h2>@category.Name</h2>
+                        <p class="category-description mb-0">@category.Description</p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    @foreach (var item in items)
+                    {
+                        <div class="col-lg-4 col-md-6">
+                            <div class="menu-item-card">
+                                <div class="menu-item-image-container">
+                                    <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "https://via.placeholder.com/400x300?text=" + item.Name : item.ImageUrl)"
+                                         alt="@item.Name"
+                                         class="menu-item-image">
+
+                                    <div class="prep-time-badge">
+                                        <i class="fas fa-clock"></i>
+                                        <span>@item.PreparationTimeInMinutes min</span>
+                                    </div>
+
+                                    <span class="availability-badge @(item.IsAvailable ? "available" : "unavailable")">
+                                        @(item.IsAvailable ? "Available" : "Sold Out")
+                                    </span>
+
+                                    @if (item.DailyOrderCount > 0)
+                                    {
+                                        <div class="daily-count-badge">
+                                            <i class="fas fa-fire"></i> @item.DailyOrderCount sold today
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="menu-item-content">
+                                    <h5>@item.Name</h5>
+                                    <p>@item.Description</p>
+
+                                    <div class="menu-item-footer">
+                                        <div class="price-tag">$@item.Price.ToString("F2")</div>
+
+                                        @if (User.IsInRole("Customer") && item.IsAvailable)
+                                        {
+                                            <button class="btn btn-primary add-to-cart-btn"
+                                                    onclick="addToCart(@item.Id, '@Html.Raw(item.Name.Replace("'", "\\'"))', @item.Price, '@item.ImageUrl', '@category.Name')">
+                                                <i class="fas fa-cart-plus"></i> Add to Cart
+                                            </button>
+                                        }
+                                        else if (!item.IsAvailable)
+                                        {
+                                            <button class="btn btn-secondary" disabled>
+                                                <i class="fas fa-times"></i> Unavailable
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <a asp-controller="Menu" asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-primary">
+                                                <i class="fas fa-info-circle"></i> Details
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+}
+else
+{
+    <div class="no-items-message">
+        <i class="fas fa-utensils"></i>
+        <h3>No menu items available</h3>
+        <p class="text-muted">Please check back later for our delicious offerings!</p>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function addToCart(menuItemId, name, price, imageUrl, category) {
+            const data = {
+                menuItemId: menuItemId,
+                name: name,
+                price: price,
+                imageUrl: imageUrl,
+                category: category,
+                quantity: 1
+            };
+
+            const spinner = document.getElementById('loadingSpinner');
+            spinner.classList.add('active');
+
+            fetch('/Cart/AddToCart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to add to cart');
+                return response.json();
+            })
+            .then(cart => {
+                // Update cart badge
+                const badge = document.getElementById('cartBadge');
+                const totalItems = cart.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+                if (totalItems > 0) {
+                    badge.textContent = totalItems;
+                    badge.style.display = 'inline-block';
+                }
+
+                // Show success message with animation
+                showSuccessToast(`${name} added to cart!`);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorToast('Failed to add item to cart. Please try again.');
+            })
+            .finally(() => {
+                spinner.classList.remove('active');
+            });
+        }
+
+        function showSuccessToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification success';
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function showErrorToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification error';
+            toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+
+    <style>
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            font-size: 1rem;
+        }
+
+            .toast-notification.show {
+                transform: translateX(0);
+            }
+
+            .toast-notification.success {
+                background: linear-gradient(135deg, #52b788, #40916c);
+            }
+
+            .toast-notification.error {
+                background: linear-gradient(135deg, #e76f51, #d62828);
+            }
+
+            .toast-notification i {
+                font-size: 1.3rem;
+            }
+    </style>
+}

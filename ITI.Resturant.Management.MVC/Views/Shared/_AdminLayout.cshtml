@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin - Restaurant Management</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <div class="d-flex" style="min-height:100vh;">
+        <!-- Sidebar -->
+        <nav class="bg-dark text-white p-3" style="width:260px;">
+            <h4 class="text-white"><i class="fas fa-user-shield"></i> Admin</h4>
+            <ul class="nav flex-column mt-4">
+                @{
+                    var currentArea = (ViewContext.RouteData.Values["area"] ?? string.Empty).ToString();
+                    var currentController = (ViewContext.RouteData.Values["controller"] ?? string.Empty).ToString();
+                    var currentAction = (ViewContext.RouteData.Values["action"] ?? string.Empty).ToString();
+                }
+
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white @(currentArea == "Admin" && currentController == "Dashboard" ? "active" : "")"
+                       asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white @(currentArea == "Admin" && currentController == "Users" ? "active" : "")"
+                       asp-area="Admin" asp-controller="Users" asp-action="Index">
+                        <i class="fas fa-users"></i> Manage Users
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white @(currentArea == "Admin" && currentController == "Roles" ? "active" : "")"
+                       asp-area="Admin" asp-controller="Roles" asp-action="Index">
+                        <i class="fas fa-user-tag"></i> Manage Roles
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white @(currentArea == "Admin" && currentController == "MenuItems" ? "active" : "")"
+                       asp-area="Admin" asp-controller="MenuItems" asp-action="ManageMenu">
+                        <i class="fas fa-utensils"></i> Menu Items
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white @(currentArea == "" && currentController == "Order" ? "active" : "")"
+                       asp-area="" asp-controller="Order" asp-action="Index">
+                        <i class="fas fa-clipboard-list"></i> Orders
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white @(currentArea == "Admin" && currentController == "Categories" ? "active" : "")"
+                       asp-area="Admin" asp-controller="Categories" asp-action="ManageCategories">
+                        <i class="fas fa-tags"></i> Categories
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white @(currentArea == "" && currentController == "Analytics" ? "active" : "")"
+                       asp-area="" asp-controller="Analytics" asp-action="Index">
+                        <i class="fas fa-chart-line"></i> Analytics
+                    </a>
+                </li>
+                <li class="nav-item mt-3">
+                    <a class="nav-link text-white @(currentArea == "Admin" && currentController == "Dashboard" && currentAction == "Settings" ? "active" : "")"
+                       asp-area="Admin" asp-controller="Dashboard" asp-action="Settings">
+                        <i class="fas fa-cogs"></i> Settings
+                    </a>
+                </li>
+            </ul>
+            <div class="mt-auto pt-3">
+                <small>Signed in as <strong>@User?.Identity?.Name</strong></small>
+                <div class="mt-2">
+                    <a class="btn btn-sm btn-outline-light" asp-area="" asp-controller="Account" asp-action="Logout">Logout</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Content -->
+        <div class="flex-grow-1 bg-light">
+            <header class="p-3 border-bottom bg-white">
+                <div class="container-fluid d-flex justify-content-between align-items-center">
+                    <h5 class="m-0">@ViewData["Title"]</h5>
+                    <div>
+                        <a class="btn btn-outline-secondary me-2" asp-area="" asp-controller="Home" asp-action="Index">
+                            <i class="fas fa-home"></i> Public Site
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <main class="p-4">
+                <div class="container-fluid">
+                    @RenderBody()
+                </div>
+            </main>
+
+            <footer class="p-3 bg-white border-top">
+                <div class="container-fluid">
+                    <small>&copy; @DateTime.Now.Year Restaurant Manager - Admin</small>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/admin.js" asp-append-version="true"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

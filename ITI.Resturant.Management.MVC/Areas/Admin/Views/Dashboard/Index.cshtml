@@ -1,0 +1,201 @@
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var totalRevenue = ViewBag.TotalRevenue as decimal? ?? 0m;
+    var registeredUsers = ViewBag.RegisteredUsers as int? ?? (ViewBag.RegisteredUsers is long ? (int)ViewBag.RegisteredUsers : 0);
+    var activeMenuItems = ViewBag.ActiveMenuItems as int? ?? 0;
+
+    var byCat = ViewBag.ByCategory as IDictionary<int, decimal> ?? new Dictionary<int, decimal>();
+    var topItems = ViewBag.TopItems as IDictionary<int, int> ?? new Dictionary<int, int>();
+    var daily = ViewBag.DailySales as IDictionary<string, decimal> ?? new Dictionary<string, decimal>();
+
+    var from = (ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd") ?? DateTime.Today.AddDays(-6).ToString("yyyy-MM-dd");
+    var to = (ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd");
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+}
+
+<div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h2><i class="fas fa-user-shield"></i> Admin Dashboard</h2>
+        <div>
+            <a asp-area="Admin" asp-controller="Users" asp-action="Index" class="btn btn-outline-primary me-2">Manage Users</a>
+            <a asp-area="Admin" asp-controller="MenuItems" asp-action="ManageMenu" class="btn btn-outline-secondary me-2">Manage Menu</a>
+            <a asp-area="Admin" asp-controller="Roles" asp-action="Index" class="btn btn-outline-secondary me-2">Manage Roles</a>
+            <form method="get" class="d-inline-block" id="dateFilterForm">
+                <input type="text" id="dateRange" class="form-control d-inline-block" style="width:220px; display:inline-block;" />
+                <input type="hidden" name="from" id="fromInput" />
+                <input type="hidden" name="to" id="toInput" />
+                <button type="submit" class="btn btn-primary ms-2">Filter</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card p-3 shadow-sm stats-card">
+            <h6>Total Revenue</h6>
+            <h3>@String.Format("{0:C}", totalRevenue)</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 shadow-sm stats-card">
+            <h6>Active Menu Items</h6>
+            <h3>@activeMenuItems</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 shadow-sm stats-card">
+            <h6>Registered Users</h6>
+            <h3>@registeredUsers</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 shadow-sm stats-card">
+            <h6>Reporting Range</h6>
+            <h6 class="text-muted">@from - @to</h6>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card p-3 shadow-sm">
+            <h6>Sales by Category</h6>
+            <canvas id="salesByCategoryChart" width="400" height="250"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3 shadow-sm">
+            <h6>Top Selling Items</h6>
+            <canvas id="topItemsChart" width="400" height="250"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card p-3 shadow-sm">
+            <h6>Daily Sales (Line)</h6>
+            <canvas id="dailySalesChart" width="1000" height="250"></canvas>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Initialize flatpickr range picker
+        (function() {
+            const initialFrom = "@from";
+            const initialTo = "@to";
+            const dateRangeEl = document.getElementById('dateRange');
+            const fromInput = document.getElementById('fromInput');
+            const toInput = document.getElementById('toInput');
+
+            const fp = flatpickr(dateRangeEl, {
+                mode: 'range',
+                dateFormat: 'Y-m-d',
+                defaultDate: [initialFrom, initialTo],
+                onChange: function(selectedDates, dateStr, instance) {
+                    if (selectedDates.length === 2) {
+                        const f = instance.formatDate(selectedDates[0], 'Y-m-d');
+                        const t = instance.formatDate(selectedDates[1], 'Y-m-d');
+                        fromInput.value = f;
+                        toInput.value = t;
+                    }
+                    else if (selectedDates.length === 1) {
+                        const f = instance.formatDate(selectedDates[0], 'Y-m-d');
+                        fromInput.value = f;
+                        toInput.value = f;
+                    }
+                }
+            });
+
+            // seed hidden inputs
+            fromInput.value = initialFrom;
+            toInput.value = initialTo;
+        })();
+
+        // Prepare data from server
+        const salesByCategory = @Html.Raw(JsonSerializer.Serialize(byCat));
+        const topItems = @Html.Raw(JsonSerializer.Serialize(topItems));
+        const dailySales = @Html.Raw(JsonSerializer.Serialize(daily));
+
+        // Sales by Category chart (bar)
+        (function() {
+            const labels = Object.keys(salesByCategory).map(k => `Category ${k}`);
+            const data = Object.values(salesByCategory).map(v => Number(v));
+
+            const ctx = document.getElementById('salesByCategoryChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Sales',
+                        data: data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        })();
+
+        // Top items chart (doughnut)
+        (function() {
+            const labels = Object.keys(topItems).map(k => `Item ${k}`);
+            const data = Object.values(topItems).map(v => Number(v));
+            const colors = labels.map((_, i) => `hsl(${(i * 60) % 360} 70% 50%)`);
+
+            const ctx = document.getElementById('topItemsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: labels, datasets: [{ data: data, backgroundColor: colors }] },
+                options: { responsive: true }
+            });
+        })();
+
+        // Daily sales chart (line)
+        (function() {
+            const entries = Object.entries(dailySales).sort((a,b) => a[0].localeCompare(b[0]));
+            const labels = entries.map(e => e[0]);
+            const data = entries.map(e => Number(e[1]));
+
+            const ctx = document.getElementById('dailySalesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Daily Revenue',
+                        data: data,
+                        fill: true,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        })();
+    </script>
+}

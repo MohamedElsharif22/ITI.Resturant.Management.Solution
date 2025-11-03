@@ -1,0 +1,41 @@
+@model List<ITI.Resturant.Management.Domain.Entities.Menu.MenuCategory>
+@{
+    ViewData["Title"] = "Manage Categories";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Manage Categories</h2>
+    <a asp-area="Admin" asp-controller="Categories" asp-action="CreateCategory" class="btn btn-primary">Add Category</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Icon</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr>
+                        <td>@c.Name</td>
+                        <td>@c.Description</td>
+                        <td><i class="fas @c.IconClass"></i></td>
+                        <td class="text-end">
+                            <a asp-area="Admin" asp-controller="Categories" asp-action="EditCategory" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary me-1">Edit</a>
+                            <form asp-area="Admin" asp-controller="Categories" asp-action="DeleteCategory" asp-route-id="@c.Id" method="post" class="d-inline">@Html.AntiForgeryToken()
+                                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete category?');">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

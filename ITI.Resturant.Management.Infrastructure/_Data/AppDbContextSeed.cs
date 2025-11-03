@@ -21,8 +21,8 @@ namespace ITI.Resturant.Management.Infrastructure._Data
                     var adminRole = new IdentityRole("Admin");
                     await roleManager.CreateAsync(adminRole);
 
-                    var userRole = new IdentityRole("User");
-                    await roleManager.CreateAsync(userRole);
+                    var customerRole = new IdentityRole("Customer");
+                    await roleManager.CreateAsync(customerRole);
                 }
                 else
                 {
@@ -34,7 +34,7 @@ namespace ITI.Resturant.Management.Infrastructure._Data
                     FirstName = "Muhammad",
                     LastName = "Kamal",
                     UserName = "admin_Muhammad",
-                    Email = "admin@byway.com",
+                    Email = "admin@asp.com",
 
 
                 };

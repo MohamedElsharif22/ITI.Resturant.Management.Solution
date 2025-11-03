@@ -1,0 +1,354 @@
+@model List<ITI.Resturant.Management.Application.DTOs.OrderSummaryDto>
+@{
+    ViewData["Title"] = "My Orders";
+    var isAdmin = User.IsInRole("Admin");
+}
+
+<style>
+    .orders-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .orders-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0;
+        }
+
+    .order-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+
+        .order-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .order-id {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+    }
+
+        .order-id i {
+            color: var(--primary-color);
+        }
+
+    .status-badge {
+        padding: 0.5rem 1.2rem;
+        border-radius: 25px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-pending {
+        background: linear-gradient(135deg, #ffd166, #f4a261);
+        color: white;
+    }
+
+    .status-confirmed {
+        background: linear-gradient(135deg, #5390d9, #4361ee);
+        color: white;
+    }
+
+    .status-preparing {
+        background: linear-gradient(135deg, #f4a261, #e76f51);
+        color: white;
+    }
+
+    .status-ready {
+        background: linear-gradient(135deg, #52b788, #40916c);
+        color: white;
+    }
+
+    .status-delivered {
+        background: linear-gradient(135deg, #2d6a4f, #1b4332);
+        color: white;
+    }
+
+    .status-cancelled {
+        background: linear-gradient(135deg, #e76f51, #d62828);
+        color: white;
+    }
+
+    .order-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .detail-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, rgba(45, 106, 79, 0.1), rgba(64, 145, 108, 0.1));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-color);
+        font-size: 1.1rem;
+    }
+
+    .detail-content {
+        flex-grow: 1;
+    }
+
+    .detail-label {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 0.1rem;
+    }
+
+    .detail-value {
+        font-weight: 700;
+        color: var(--primary-dark);
+    }
+
+    .order-total {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--accent-light);
+    }
+
+    .order-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 2px solid #f0f0f0;
+    }
+
+        .order-actions .btn {
+            padding: 0.6rem 1.5rem;
+            font-weight: 600;
+            border-radius: 25px;
+        }
+
+    .no-orders {
+        background: white;
+        border-radius: 15px;
+        padding: 4rem 2rem;
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+        .no-orders i {
+            font-size: 5rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+        }
+
+        .no-orders h3 {
+            color: var(--primary-dark);
+            margin-bottom: 1rem;
+        }
+
+    .filter-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        margin-bottom: 2rem;
+    }
+
+    .filter-group {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        padding: 0.6rem 1.5rem;
+        border: 2px solid #e0e0e0;
+        background: white;
+        color: var(--text-dark);
+        border-radius: 25px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .filter-btn:hover {
+            border-color: var(--primary-light);
+            background: rgba(64, 145, 108, 0.05);
+        }
+
+        .filter-btn.active {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            color: white;
+        }
+</style>
+
+<div class="orders-header">
+    <div>
+        <h1><i class="fas fa-receipt"></i> @ViewData["Title"]</h1>
+        <p class="mb-0 opacity-75">Track and manage your orders</p>
+    </div>
+    @if (isAdmin)
+    {
+        <a asp-action="Create" class="btn btn-light btn-lg">
+            <i class="fas fa-plus"></i> New Order
+        </a>
+    }
+</div>
+
+@if (Model != null && Model.Any())
+{
+    <div class="filter-section">
+        <div class="filter-group">
+            <button class="filter-btn active" onclick="filterOrders('all')">
+                <i class="fas fa-list"></i> All Orders
+            </button>
+            <button class="filter-btn" onclick="filterOrders('Pending')">
+                <i class="fas fa-clock"></i> Pending
+            </button>
+            <button class="filter-btn" onclick="filterOrders('Preparing')">
+                <i class="fas fa-fire"></i> Preparing
+            </button>
+            <button class="filter-btn" onclick="filterOrders('Ready')">
+                <i class="fas fa-check"></i> Ready
+            </button>
+            <button class="filter-btn" onclick="filterOrders('Delivered')">
+                <i class="fas fa-truck"></i> Delivered
+            </button>
+            <button class="filter-btn" onclick="filterOrders('Cancelled')">
+                <i class="fas fa-times"></i> Cancelled
+            </button>
+        </div>
+    </div>
+
+    <div id="ordersContainer">
+        @foreach (var order in Model.OrderByDescending(o => o.OrderDate))
+        {
+            <div class="order-card" data-status="@order.Status">
+                <div class="order-header">
+                    <div>
+                        <div class="order-id">
+                            <i class="fas fa-hashtag"></i> Order @order.Id
+                        </div>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar"></i> @order.OrderDate.ToString("MMM dd, yyyy - hh:mm tt")
+                        </small>
+                    </div>
+                    <span class="status-badge status-@order.Status.ToLower()">
+                        @order.Status
+                    </span>
+                </div>
+
+                <div class="order-details">
+                    <div class="detail-item">
+                        <div class="detail-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="detail-content">
+                            <div class="detail-label">Customer</div>
+                            <div class="detail-value">@order.CustomerName</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="detail-content">
+                            <div class="detail-label">Total Amount</div>
+                            <div class="detail-value order-total">$@order.Total.ToString("F2")</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-actions">
+                    <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-primary">
+                        <i class="fas fa-eye"></i> View Details
+                    </a>
+
+                    @if (order.Status == "Pending" || order.Status == "Confirmed" || order.Status == "Preparing")
+                    {
+                        <form asp-action="Cancel" asp-route-id="@order.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-danger">
+                                <i class="fas fa-times"></i> Cancel Order
+                            </button>
+                        </form>
+                    }
+
+                    @if (isAdmin && (order.Status == "Pending" || order.Status == "Preparing"))
+                    {
+                        <form asp-action="UpdateStatus" method="post" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@order.Id" />
+                            <input type="hidden" name="status" value="@(order.Status == "Pending" ? "Preparing" : "Ready")" />
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-arrow-right"></i> @(order.Status == "Pending" ? "Start Preparing" : "Mark as Ready")
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="no-orders">
+        <i class="fas fa-receipt"></i>
+        <h3>No orders yet</h3>
+        <p class="text-muted mb-3">You haven't placed any orders. Start by browsing our delicious menu!</p>
+        <a asp-controller="Menu" asp-action="Index" class="btn btn-primary btn-lg">
+            <i class="fas fa-book-open"></i> Browse Menu
+        </a>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function filterOrders(status) {
+            const cards = document.querySelectorAll('.order-card');
+            const buttons = document.querySelectorAll('.filter-btn');
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.closest('.filter-btn').classList.add('active');
+
+            cards.forEach(card => {
+                if (status === 'all' || card.dataset.status === status) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+}

@@ -1,8 +1,8 @@
-﻿using Byway.Infrastructure.Repositories;
-using ITI.Resturant.Management.Domain;
+﻿using ITI.Resturant.Management.Domain;
 using ITI.Resturant.Management.Domain.Entities;
 using ITI.Resturant.Management.Domain.Repositories.Contracts;
 using ITI.Resturant.Management.Infrastructure._Data;
+using ITI.Resturant.Management.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections;

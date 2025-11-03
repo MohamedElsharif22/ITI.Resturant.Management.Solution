@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using ITI.Resturant.Management.MVC.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace ITI.Resturant.Management.MVC.Controllers
 {

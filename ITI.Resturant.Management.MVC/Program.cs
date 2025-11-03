@@ -18,6 +18,13 @@ namespace ITI.Resturant.Management.MVC
             builder.Services.AddDbContextServices(builder.Configuration);
             builder.Services.AddApplicationServices();
 
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromHours(2);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
+
             var app = builder.Build();
 
             await app.MiagrateAndSeedDatabasesAsync();
@@ -33,7 +40,7 @@ namespace ITI.Resturant.Management.MVC
 
             app.UseHttpsRedirection();
             app.UseRouting();
-
+            app.UseSession();
             app.UseStaticFiles();
 
             app.UseAuthentication();

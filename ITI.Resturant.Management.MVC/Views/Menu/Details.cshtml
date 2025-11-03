@@ -5,29 +5,284 @@
     ViewData["Title"] = Model.Name;
 }
 
-<div class="card">
-    <div class="row g-0">
-        <div class="col-md-4">
-            <img src="@imgResolver.Resolve(Model.ImageUrl)" class="img-fluid rounded-start" alt="@Model.Name" />
-        </div>
-        <div class="col-md-8">
-            <div class="card-body">
-                <h3>@Model.Name</h3>
-                <p>@Model.Description</p>
-                <p><strong>@Model.Price.ToString("C")</strong></p>
-                <p>Preparation: @Model.PreparationTimeInMinutes minutes</p>
-                @if (Model.IsAvailable)
-                {
-                    <form asp-controller="Order" asp-action="Create" method="get">
-                        <input type="hidden" name="menuItemId" value="@Model.Id" />
-                        <button class="btn btn-success">Order Now</button>
-                    </form>
-                }
-                else
-                {
-                    <span class="badge bg-danger">Unavailable</span>
-                }
+<style>
+    .detail-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    .detail-image {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+    }
+
+    .detail-content {
+        padding: 2rem;
+    }
+
+    .detail-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--primary-dark);
+        margin-bottom: 1rem;
+    }
+
+    .detail-description {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    .detail-price {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--accent-light);
+        margin-bottom: 1rem;
+    }
+
+    .detail-meta {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: rgba(64, 145, 108, 0.05);
+        border-radius: 10px;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .meta-item i {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+
+    .quantity-selector {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .quantity-btn {
+        width: 50px;
+        height: 50px;
+        border: none;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 10px;
+        font-size: 1.5rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+        .quantity-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.1);
+        }
+
+    .quantity-display {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+        min-width: 60px;
+        text-align: center;
+    }
+
+    .add-to-cart-large {
+        padding: 1rem 3rem;
+        font-size: 1.2rem;
+        font-weight: 700;
+        border-radius: 10px;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="detail-card">
+                <div class="row g-0">
+                    <div class="col-md-6">
+                        <img src="@imgResolver.Resolve(Model.ImageUrl)" class="detail-image" alt="@Model.Name" />
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-content">
+                            <h1 class="detail-title">@Model.Name</h1>
+                            <p class="detail-description">@Model.Description</p>
+
+                            <div class="detail-price">$@Model.Price.ToString("F2")</div>
+
+                            <div class="detail-meta">
+                                <div class="meta-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span><strong>@Model.PreparationTimeInMinutes</strong> minutes</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-@(Model.IsAvailable ? "check-circle" : "times-circle")"></i>
+                                    <span><strong>@(Model.IsAvailable ? "Available" : "Unavailable")</strong></span>
+                                </div>
+                            </div>
+
+                            @if (Model.IsAvailable)
+                            {
+                                @if (User.IsInRole("Customer"))
+                                {
+                                    <div class="quantity-selector">
+                                        <button type="button" class="quantity-btn" onclick="changeQuantity(-1)">-</button>
+                                        <span class="quantity-display" id="quantity">1</span>
+                                        <button type="button" class="quantity-btn" onclick="changeQuantity(1)">+</button>
+                                    </div>
+
+                                    <button class="btn btn-accent btn-lg add-to-cart-large w-100" onclick="addToCartFromDetails()">
+                                        <i class="fas fa-cart-plus"></i> Add to Cart
+                                    </button>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Order" asp-action="Create" class="btn btn-accent btn-lg w-100">
+                                        <i class="fas fa-shopping-bag"></i> Order Now
+                                    </a>
+                                }
+                            }
+                            else
+                            {
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-circle"></i> This item is currently unavailable
+                                </div>
+                            }
+
+                            <a asp-controller="Menu" asp-action="Index" class="btn btn-outline-primary w-100 mt-3">
+                                <i class="fas fa-arrow-left"></i> Back to Menu
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        let quantity = 1;
+
+        function changeQuantity(delta) {
+            quantity = Math.max(1, quantity + delta);
+            document.getElementById('quantity').textContent = quantity;
+        }
+
+        function addToCartFromDetails() {
+            const data = {
+                menuItemId: @Model.Id,
+                name: '@Html.Raw(Model.Name.Replace("'", "\\'"))',
+                price: @Model.Price,
+                imageUrl: '@Model.ImageUrl',
+                category: '@Model.Category?.Name',
+                quantity: quantity
+            };
+
+            const spinner = document.getElementById('loadingSpinner');
+            if (spinner) spinner.classList.add('active');
+
+            fetch('/Cart/AddToCart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to add to cart');
+                return response.json();
+            })
+            .then(cart => {
+                // Update cart badge
+                const badge = document.getElementById('cartBadge');
+                if (badge) {
+                    const totalItems = cart.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+                    if (totalItems > 0) {
+                        badge.textContent = totalItems;
+                        badge.style.display = 'inline-block';
+                    }
+                }
+
+                // Show success message
+                showSuccessToast(`${quantity} x ${data.name} added to cart!`);
+
+                // Reset quantity
+                quantity = 1;
+                document.getElementById('quantity').textContent = quantity;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorToast('Failed to add item to cart. Please try again.');
+            })
+            .finally(() => {
+                if (spinner) spinner.classList.remove('active');
+            });
+        }
+
+        function showSuccessToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification success';
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function showErrorToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification error';
+            toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+
+    <style>
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+
+            .toast-notification.show {
+                transform: translateX(0);
+            }
+
+            .toast-notification.success {
+                background: linear-gradient(135deg, #52b788, #40916c);
+            }
+
+            .toast-notification.error {
+                background: linear-gradient(135deg, #e76f51, #d62828);
+            }
+    </style>
+}

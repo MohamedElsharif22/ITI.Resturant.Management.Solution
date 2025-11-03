@@ -3,6 +3,7 @@ using ITI.Resturant.Management.Domain.Entities.Menu;
 using ITI.Resturant.Management.Domain.Entities.Enums;
 using ITI.Resturant.Management.Domain.Repositories.Contracts;
 using ITI.Resturant.Management.Domain;
+using ITI.Resturant.Management.Domain.Specification;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,7 +41,11 @@ namespace ITI.Resturant.Management.Application.Services
             => await _unitOfWork.Repository<Order>().GetAllAsync();
 
         public async Task<Order?> GetByIdAsync(int id)
-            => await _unitOfWork.Repository<Order>().GetByIdAsync(id);
+        {
+            var spec = new OrderWithItemsSpecification(id);
+            var order = await _unitOfWork.Repository<Order>().GetWithSpecsAsync(spec);
+            return order;
+        }
 
         public async Task<IEnumerable<Order>> GetByStatusAsync(OrderStatus status)
         {

@@ -1,0 +1,33 @@
+@model ITI.Resturant.Management.Domain.Entities.Menu.MenuCategory
+@{
+    ViewData["Title"] = "Edit Category";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2>Edit Category</h2>
+
+<form method="post" asp-area="Admin" asp-controller="Categories" asp-action="EditCategory" asp-route-id="@Model.Id">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Icon CSS Class (font-awesome)</label>
+        <input asp-for="IconClass" class="form-control" />
+        <span asp-validation-for="IconClass" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-area="Admin" asp-controller="Categories" asp-action="ManageCategories" class="btn btn-secondary ms-2">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

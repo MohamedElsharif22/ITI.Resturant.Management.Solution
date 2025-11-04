@@ -26,15 +26,11 @@ namespace ITI.Resturant.Management.MVC.Controllers
             if (!ModelState.IsValid) return View(dto);
 
             ApplicationUser? user = null;
-            if (!string.IsNullOrWhiteSpace(dto.Email))
-            {
-                user = await _userManager.FindByEmailAsync(dto.Email);
-            }
 
-            if (user == null && !string.IsNullOrWhiteSpace(dto.UserName))
-            {
-                user = await _userManager.FindByNameAsync(dto.UserName);
-            }
+            user = await _userManager.FindByEmailAsync(dto.EmailorUserName);
+
+            user ??= await _userManager.FindByNameAsync(dto.EmailorUserName);
+            
 
             if (user == null)
             {

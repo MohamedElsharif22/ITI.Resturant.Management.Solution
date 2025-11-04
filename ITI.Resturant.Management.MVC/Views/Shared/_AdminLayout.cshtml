@@ -47,7 +47,7 @@
                     </a>
                 </li>
                 <li class="nav-item mb-2">
-                    <a class="nav-link text-white @(currentArea == "" && currentController == "Order" ? "active" : "")"
+                    <a class="nav-link text-white @(currentController == "Order" ? "active" : "")"
                        asp-area="" asp-controller="Order" asp-action="Index">
                         <i class="fas fa-clipboard-list"></i> Orders
                     </a>
@@ -59,7 +59,7 @@
                     </a>
                 </li>
                 <li class="nav-item mb-2">
-                    <a class="nav-link text-white @(currentArea == "" && currentController == "Analytics" ? "active" : "")"
+                    <a class="nav-link text-white @(currentController == "Analytics" ? "active" : "")"
                        asp-area="" asp-controller="Analytics" asp-action="Index">
                         <i class="fas fa-chart-line"></i> Analytics
                     </a>
@@ -74,7 +74,10 @@
             <div class="mt-auto pt-3">
                 <small>Signed in as <strong>@User?.Identity?.Name</strong></small>
                 <div class="mt-2">
-                    <a class="btn btn-sm btn-outline-light" asp-area="" asp-controller="Account" asp-action="Logout">Logout</a>
+                    <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-light">Logout</button>
+                    </form>
                 </div>
             </div>
         </nav>

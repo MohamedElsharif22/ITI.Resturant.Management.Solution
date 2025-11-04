@@ -1,0 +1,21 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Business Closed";
+}
+
+<div class="text-center mt-5">
+    <h1 class="display-4">We're Currently Closed</h1>
+    <p class="lead">Our business hours are from <strong>@ViewData["Opening"]</strong> to <strong>@ViewData["Closing"]</strong>.</p>
+
+    @if ((bool)ViewData["IsHappyHour"])
+    {
+        <p class="text-success">It's happy hour right now! Check back later for great offers.</p>
+    }
+
+    <p>If you were placing an order, you can return to continue when we're open.</p>
+
+    <div class="mt-4">
+        <a href="@(ViewData["ReturnUrl"]?.ToString() ?? "/")" class="btn btn-primary">Return</a>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary ms-2">Home</a>
+    </div>
+</div>

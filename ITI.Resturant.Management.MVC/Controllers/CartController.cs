@@ -97,6 +97,7 @@ namespace ITI.Resturant.Management.MVC.Controllers
         public decimal Price { get; set; }
         public string ImageUrl { get; set; }
         public string Category { get; set; }
+        public string CategoryIcon { get; set; }
         public int Quantity { get; set; }
     }
 

@@ -37,6 +37,7 @@
                         </td>
                         <td>@(u.IsLockedOut ? "Yes" : "No")</td>
                         <td>
+                            <a class="btn btn-sm btn-outline-secondary me-1" asp-area="Admin" asp-controller="Users" asp-action="Details" asp-route-id="@u.Id">Details</a>
                             <button class="btn btn-sm btn-outline-secondary me-1" onclick="showRoleEditor('@u.Id')">Edit Roles</button>
                             @if (u.IsLockedOut)
                             {

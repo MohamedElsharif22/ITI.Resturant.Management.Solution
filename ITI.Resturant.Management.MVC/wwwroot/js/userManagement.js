@@ -31,7 +31,8 @@
             var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
             var token = tokenInput ? tokenInput.value : '';
 
-            var response = await fetch('/Admin/UpdateUserRoles?id=' + encodeURIComponent(userId), {
+            // POST to the Users controller UpdateUserRoles action
+            var response = await fetch('/Admin/Users/UpdateUserRoles?id=' + encodeURIComponent(userId), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -61,7 +62,8 @@
             var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
             var token = tokenInput ? tokenInput.value : '';
 
-            var url = lock ? ('/Admin/LockUser?id=' + encodeURIComponent(userId)) : ('/Admin/UnlockUser?id=' + encodeURIComponent(userId));
+            // POST to the Users controller Lock/Unlock actions
+            var url = lock ? ('/Admin/Users/LockUser?id=' + encodeURIComponent(userId)) : ('/Admin/Users/UnlockUser?id=' + encodeURIComponent(userId));
             var response = await fetch(url, {
                 method: 'POST',
                 headers: {

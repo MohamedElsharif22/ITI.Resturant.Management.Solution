@@ -1,4 +1,6 @@
 using ITI.Resturant.Management.Application.DTOs.Admin;
+using ITI.Resturant.Management.Application.DTOs.Email;
+using ITI.Resturant.Management.Application.ExternalServices.Contracts;
 using ITI.Resturant.Management.Domain.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -16,11 +18,13 @@ namespace ITI.Resturant.Management.MVC.Areas.Admin.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IEmailService _emailService;
 
-        public UsersController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+        public UsersController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IEmailService emailService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _emailService = emailService;
         }
 
         public async Task<IActionResult> Index()
@@ -121,19 +125,29 @@ namespace ITI.Resturant.Management.MVC.Areas.Admin.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
+            // Generate a reset token and send a password reset email to the user
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var tempPassword = "TempPass123!"; // In production, generate a random password
-            
-            var result = await _userManager.ResetPasswordAsync(user, token, tempPassword);
-            if (!result.Succeeded)
+            var resetUrl = Url.Action("ResetPassword", "Account", new { userId = user.Id, token = token }, Request.Scheme);
+
+            var email = new EmailRequest
             {
-                return BadRequest(new { errors = result.Errors });
+                ToEmail = user.Email ?? string.Empty,
+                ToName = user.UserName,
+                Subject = "Admin initiated password reset",
+                Body = $"<p>Hello {user.UserName},</p><p>An administrator initiated a password reset for your account. Click the link below to reset your password:</p><p><a href=\"{resetUrl}\">Reset your password</a></p>",
+                IsHtml = true
+            };
+
+            try
+            {
+                await _emailService.SendEmailAsync(email);
+            }
+            catch
+            {
+                return BadRequest(new { success = false, message = "Failed to send reset email." });
             }
 
-            // Force password change on next login
-            await _userManager.UpdateSecurityStampAsync(user);
-
-            return Ok(new { success = true, tempPassword });
+            return Ok(new { success = true });
         }
 
         [HttpPost]

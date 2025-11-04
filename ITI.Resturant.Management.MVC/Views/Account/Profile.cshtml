@@ -1,9 +1,7 @@
+@model ITI.Resturant.Management.Application.DTOs.Account.EditProfileDto
+
 @{
     ViewData["Title"] = "My Profile";
-    var email = ViewData["Email"]?.ToString() ?? "";
-    var userName = ViewData["UserName"]?.ToString() ?? "";
-    var firstName = ViewData["FirstName"]?.ToString() ?? "";
-    var lastName = ViewData["LastName"]?.ToString() ?? "";
 }
 
 <style>
@@ -48,12 +46,9 @@
     }
 
     @@media (max-width: 992px) {
-        .profile-content
-
-    {
-        grid-template-columns: 1fr;
-    }
-
+        .profile-content {
+            grid-template-columns: 1fr;
+        }
     }
 
     .profile-sidebar {
@@ -206,12 +201,20 @@
         }
 </style>
 
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <div class="profile-header">
     <div class="profile-avatar">
         <i class="fas fa-user"></i>
     </div>
-    <h1 class="profile-name">@firstName @lastName</h1>
-    <p class="profile-email">@@@userName</p>
+    <h1 class="profile-name">@Model.FirstName @Model.LastName</h1>
+    <p class="profile-email">@@@Model.UserName</p>
 </div>
 
 <div class="profile-content">
@@ -261,10 +264,13 @@
                 </a>
             </li>
             <li>
-                <a asp-controller="Account" asp-action="Logout" class="text-danger">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
+                <form asp-controller="Account" asp-action="Logout" method="post" style="margin: 0;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="text-danger" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; width: 100%; text-align: left; border-radius: 10px; font-weight: 600; transition: all 0.3s ease;">
+                        <i class="fas fa-sign-out-alt" style="width: 25px; text-align: center; font-size: 1.2rem;"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
             </li>
         </ul>
     </div>
@@ -312,21 +318,21 @@
                 <div class="info-label">
                     <i class="fas fa-user"></i> Full Name
                 </div>
-                <div class="info-value">@firstName @lastName</div>
+                <div class="info-value">@Model.FirstName @Model.LastName</div>
             </div>
 
             <div class="info-item">
                 <div class="info-label">
                     <i class="fas fa-at"></i> Username
                 </div>
-                <div class="info-value">@userName</div>
+                <div class="info-value">@Model.UserName</div>
             </div>
 
             <div class="info-item">
                 <div class="info-label">
                     <i class="fas fa-envelope"></i> Email Address
                 </div>
-                <div class="info-value">@email</div>
+                <div class="info-value">@Model.Email</div>
             </div>
 
             <div class="info-item">
@@ -339,12 +345,12 @@
 
         <!-- Action Buttons -->
         <div class="action-buttons">
-            <button class="btn btn-primary" onclick="editProfile()">
+            <a asp-controller="Account" asp-action="EditProfile" class="btn btn-primary">
                 <i class="fas fa-edit"></i> Edit Profile
-            </button>
-            <button class="btn btn-outline-primary" onclick="changePassword()">
+            </a>
+            <a asp-controller="Account" asp-action="ChangePassword" class="btn btn-outline-primary">
                 <i class="fas fa-key"></i> Change Password
-            </button>
+            </a>
             <a asp-controller="Order" asp-action="Index" class="btn btn-accent">
                 <i class="fas fa-receipt"></i> View My Orders
             </a>
@@ -361,15 +367,3 @@
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script>
-        function editProfile() {
-            alert('Edit profile functionality coming soon!');
-        }
-
-        function changePassword() {
-            alert('Change password functionality coming soon!');
-        }
-    </script>
-}
